@@ -597,6 +597,158 @@ function gymNormalize(value) {
     .trim();
 }
 
+
+function exerciseNameItalian(name) {
+  let t = String(name || "").toLowerCase();
+
+  const replacements = [
+    ["reverse grip", "presa inversa"],
+    ["close grip", "presa stretta"],
+    ["wide grip", "presa larga"],
+    ["neutral grip", "presa neutra"],
+    ["one arm", "a un braccio"],
+    ["single arm", "a un braccio"],
+    ["one leg", "a una gamba"],
+    ["single leg", "a una gamba"],
+    ["behind neck", "dietro la nuca"],
+    ["behind head", "dietro la testa"],
+    ["bent over", "piegato in avanti"],
+    ["overhead", "sopra la testa"],
+    ["incline bench press", "panca inclinata"],
+    ["decline bench press", "panca declinata"],
+    ["bench press", "panca piana"],
+    ["chest press", "spinte per il petto"],
+    ["shoulder press", "spinte per le spalle"],
+    ["military press", "lento avanti"],
+    ["leg press", "pressa per le gambe"],
+    ["leg extension", "estensione delle gambe"],
+    ["leg curl", "leg curl"],
+    ["lat pulldown", "lat machine"],
+    ["pulldown", "lat machine"],
+    ["pull-up", "trazioni"],
+    ["pull up", "trazioni"],
+    ["chin-up", "trazioni presa supina"],
+    ["chin up", "trazioni presa supina"],
+    ["push-up", "piegamenti"],
+    ["push up", "piegamenti"],
+    ["hip thrust", "spinta d'anca"],
+    ["glute bridge", "ponte glutei"],
+    ["calf raise", "alzata polpacci"],
+    ["lateral raise", "alzata laterale"],
+    ["front raise", "alzata frontale"],
+    ["rear delt", "deltoide posteriore"],
+    ["upright row", "tirata al mento"],
+    ["bent over row", "rematore"],
+    ["seated row", "rematore da seduto"],
+    ["good morning", "good morning"],
+    ["deadlift", "stacco"],
+    ["romanian", "rumeno"],
+    ["squat", "squat"],
+    ["lunge", "affondo"],
+    ["crunch", "crunch"],
+    ["sit-up", "sit-up"],
+    ["sit up", "sit-up"],
+    ["plank", "plank"],
+    ["side bend", "flessione laterale"],
+    ["side plank", "plank laterale"],
+    ["hip abduction", "abduzione dell'anca"],
+    ["hip adduction", "adduzione dell'anca"],
+    ["wrist curl", "flessione dei polsi"],
+    ["bicep curl", "curl per bicipiti"],
+    ["biceps curl", "curl per bicipiti"],
+    ["triceps extension", "estensione tricipiti"],
+    ["tricep extension", "estensione tricipiti"],
+    ["triceps dip", "dip per tricipiti"],
+    ["chest dip", "dip per il petto"],
+    ["russian twist", "torsione russa"],
+    ["leg raise", "sollevamento gambe"],
+    ["knee raise", "sollevamento ginocchia"],
+    ["calf press", "spinta polpacci"],
+    ["hack squat", "hack squat"],
+    ["front squat", "squat frontale"],
+    ["sumo squat", "squat sumo"],
+    ["split squat", "squat bulgaro"],
+    ["sissy squat", "sissy squat"],
+
+    ["smith machine", "Smith machine"],
+    ["smith", "Smith machine"],
+    ["barbell", "con bilanciere"],
+    ["dumbbell", "con manubrio"],
+    ["cable", "ai cavi"],
+    ["band", "con elastico"],
+    ["kettlebell", "con kettlebell"],
+    ["weighted", "con sovraccarico"],
+    ["assisted", "assistito"],
+    ["bodyweight", "a corpo libero"],
+
+    ["standing", "in piedi"],
+    ["seated", "da seduto"],
+    ["lying", "da sdraiato"],
+    ["kneeling", "in ginocchio"],
+    ["incline", "inclinato"],
+    ["decline", "declinato"],
+    ["reverse", "inverso"],
+    ["close-grip", "presa stretta"],
+    ["wide-grip", "presa larga"],
+    ["wide", "largo"],
+    ["narrow", "stretto"],
+    ["single", "singolo"],
+    ["alternating", "alternato"],
+
+    ["shoulder", "spalla"],
+    ["chest", "petto"],
+    ["back", "schiena"],
+    ["biceps", "bicipiti"],
+    ["bicep", "bicipite"],
+    ["triceps", "tricipiti"],
+    ["tricep", "tricipite"],
+    ["forearm", "avambraccio"],
+    ["wrist", "polso"],
+    ["hip", "anca"],
+    ["glute", "gluteo"],
+    ["hamstring", "femorale"],
+    ["quadriceps", "quadricipite"],
+    ["calves", "polpacci"],
+    ["calf", "polpaccio"],
+    ["leg", "gamba"],
+    ["knee", "ginocchio"],
+    ["neck", "collo"],
+
+    ["raise", "alzata"],
+    ["press", "spinta"],
+    ["row", "rematore"],
+    ["curl", "curl"],
+    ["extension", "estensione"],
+    ["stretch", "allungamento"],
+    ["jump", "salto"],
+    ["walk", "camminata"],
+    ["walking", "camminata"],
+    ["run", "corsa"],
+    ["running", "corsa"],
+    ["rotation", "rotazione"],
+    ["twist", "torsione"],
+    ["bridge", "ponte"],
+    ["fly", "croci"],
+    ["shrug", "scrollata"],
+    ["dip", "dip"]
+  ];
+
+  for (const [en, it] of replacements) {
+    const escaped = en.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    t = t.replace(new RegExp("\\b" + escaped + "\\b", "gi"), it);
+  }
+
+  t = t
+    .replace(/\s+/g, " ")
+    .replace(/\s+\)/g, ")")
+    .replace(/\(\s+/g, "(")
+    .trim();
+
+  if (!t) return "";
+
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 function exerciseSearchText(exercise) {
 
   const original = [
@@ -1207,7 +1359,7 @@ function renderExercises() {
 
                 ${escapeHtml(
                   exercise.name
-                )}
+                )} <span style="font-weight:500;opacity:.72;text-transform:none">— ${escapeHtml(exerciseNameItalian(exercise.name))}</span>
 
               </h3>
 
@@ -1315,7 +1467,7 @@ function openExercise(
       "modalTitle"
     )
     .textContent =
-      exercise.name;
+      exercise.name + " — " + exerciseNameItalian(exercise.name);
 
 
   document
