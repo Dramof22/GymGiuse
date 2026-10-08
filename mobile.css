@@ -98,3 +98,83 @@ img, video {
     min-height: 44px;
   }
 }
+
+/* ===== MOBILE FIX 2026 ===== */
+@media (max-width: 640px) {
+
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  img,
+  video,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  main,
+  section,
+  .container,
+  .content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    max-width: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  .gg-workout-modal,
+  .gg-workout-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+  }
+
+  .gg-workout-body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .gg-set-row {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: 30px minmax(0, 1fr) minmax(0, 1fr) 36px !important;
+  }
+
+  .gg-set-field {
+    min-width: 0;
+  }
+
+  .gg-set-field input {
+    width: 100%;
+    min-width: 0;
+  }
+}
