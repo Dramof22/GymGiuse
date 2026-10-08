@@ -106,6 +106,79 @@
     st.textContent = CSS;
     document.head.appendChild(st);
 
+
+    var planStyle = document.createElement("style");
+    planStyle.textContent = `
+      .gwk-plans {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        padding: 15px;
+        border-radius: 14px;
+        margin: 16px 0;
+      }
+
+      .gwk-plan-select {
+        width: 100%;
+        min-height: 48px;
+        margin: 9px 0 12px;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 10px;
+        background: #111;
+        color: white;
+        font-size: 16px;
+      }
+
+      .gwk-plan-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+      }
+
+      .gwk-plan-actions button {
+        min-height: 44px;
+        border: 0;
+        border-radius: 9px;
+        padding: 8px;
+        font-weight: 800;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .gwk-plan-new {
+        background: #333;
+        color: white;
+      }
+
+      .gwk-plan-save {
+        background: #22c55e;
+        color: #04130a;
+      }
+
+      .gwk-plan-delete {
+        background: #4a2020;
+        color: #ffb4b4;
+      }
+
+      .gwk-hist-delete {
+        margin-top: 12px;
+        padding: 10px;
+        border: 0;
+        border-radius: 8px;
+        background: #4a2020;
+        color: #ffb4b4;
+        font-weight: 800;
+        cursor: pointer;
+      }
+
+      @media(max-width: 360px) {
+        .gwk-plan-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    `;
+    document.head.appendChild(planStyle);
+
     var overlay = document.createElement("div");
     overlay.className = "gwk-overlay";
 
@@ -117,6 +190,14 @@
       '<div class="gwk-body">' +
       '<label class="gwk-label">NOME ALLENAMENTO</label>' +
       '<input class="gwk-name" type="text" placeholder="Es. Petto e tricipiti" autocomplete="off">' +
+      '<div class="gwk-plans">' +
+      '<label class="gwk-label">LE MIE SCHEDE SALVATE</label>' +
+      '<select class="gwk-plan-select"><option value="">Seleziona una scheda</option></select>' +
+      '<div class="gwk-plan-actions">' +
+      '<button type="button" class="gwk-plan-new">+ NUOVA</button>' +
+      '<button type="button" class="gwk-plan-save">💾 SALVA</button>' +
+      '<button type="button" class="gwk-plan-delete">ELIMINA</button>' +
+      '</div></div>' +
       '<div class="gwk-summary"></div>' +
       '<div class="gwk-list"></div>' +
       '<div class="gwk-empty"><strong>La tua scheda è vuota</strong>Premi + AGGIUNGI su un esercizio per iniziare.</div>' +
@@ -136,6 +217,185 @@
     var nameIn = $(".gwk-name"), summary = $(".gwk-summary"), list = $(".gwk-list"),
       empty = $(".gwk-empty"), finish = $(".gwk-finish"), hist = $(".gwk-hist"),
       badge = fab.querySelector(".gwk-badge");
+
+
+    // GYMGIUSE_SCHEDE_RIUTILIZZABILI_V4
+
+    var PLANS_KEY = "gymgiuse_schede_salvate_v4";
+
+    var planSelect = $(".gwk-plan-select");
+    var planSave = $(".gwk-plan-save");
+    var planNew = $(".gwk-plan-new");
+    var planDelete = $(".gwk-plan-delete");
+
+    var activePlan = "";
+
+    function getPlans() {
+      try {
+        var data = JSON.parse(localStorage.getItem(PLANS_KEY));
+        return data && typeof data === "object" &&
+          !Array.isArray(data) ? data : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function putPlans(data) {
+      localStorage.setItem(PLANS_KEY, JSON.stringify(data));
+    }
+
+    function copyWorkout(data) {
+      return JSON.parse(JSON.stringify(data));
+    }
+
+    function refreshPlans() {
+      var plans = getPlans();
+      var names = Object.keys(plans).sort(function(a, b) {
+        return a.localeCompare(b, "it");
+      });
+
+      planSelect.innerHTML =
+        '<option value="">Seleziona una scheda</option>';
+
+      names.forEach(function(name) {
+        var option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        planSelect.appendChild(option);
+      });
+
+      planSelect.value =
+        Object.prototype.hasOwnProperty.call(plans, activePlan)
+          ? activePlan : "";
+    }
+
+    function saveCurrentPlan(showMessage) {
+      var name = String(w.name || "").trim();
+
+      if (!name) {
+        alert("Inserisci il nome della scheda, per esempio Lunedì.");
+        nameIn.focus();
+        return false;
+      }
+
+      if (!w.exercises.length) {
+        alert("Aggiungi almeno un esercizio.");
+        return false;
+      }
+
+      var plans = getPlans();
+
+      if (activePlan && activePlan !== name &&
+          Object.prototype.hasOwnProperty.call(plans, name)) {
+        if (!confirm("Esiste già una scheda con questo nome. Sovrascriverla?")) {
+          return false;
+        }
+      }
+
+      w.name = name;
+
+      var saved = copyWorkout(w);
+
+      delete saved.endedAt;
+
+      plans[name] = saved;
+
+      // Se rinomini la scheda, rimuovi il vecchio nome.
+      if (activePlan && activePlan !== name) {
+        delete plans[activePlan];
+      }
+
+      try {
+        putPlans(plans);
+      } catch (e) {
+        alert("Impossibile salvare la scheda nel browser.");
+        return false;
+      }
+
+      activePlan = name;
+
+      saveW();
+      refreshPlans();
+
+      if (showMessage) {
+        alert('Scheda "' + name + '" salvata!');
+      }
+
+      return true;
+    }
+
+    planSave.addEventListener("click", function() {
+      saveCurrentPlan(true);
+    });
+
+    planNew.addEventListener("click", function() {
+      if (w.exercises.length &&
+          !confirm("Creare una nuova scheda? Salva prima le modifiche attuali se vuoi conservarle.")) {
+        return;
+      }
+
+      w = blank();
+      activePlan = "";
+
+      saveW();
+      render();
+      nameIn.focus();
+    });
+
+    planSelect.addEventListener("change", function() {
+      var name = planSelect.value;
+      if (!name) return;
+
+      var plans = getPlans();
+
+      if (!Object.prototype.hasOwnProperty.call(plans, name)) return;
+
+      if (w.exercises.length &&
+          !confirm("Aprire " + name + "? Le modifiche non salvate alla scheda attuale andranno perse.")) {
+        refreshPlans();
+        return;
+      }
+
+      w = copyWorkout(plans[name]);
+      w.name = name;
+      w.startedAt = Date.now();
+
+      delete w.endedAt;
+
+      activePlan = name;
+
+      saveW();
+      render();
+    });
+
+    planDelete.addEventListener("click", function() {
+      var name = activePlan || planSelect.value;
+
+      if (!name) {
+        alert("Seleziona prima una scheda salvata.");
+        return;
+      }
+
+      if (!confirm('Eliminare definitivamente la scheda "' + name + '"? Lo storico resterà invariato.')) {
+        return;
+      }
+
+      var plans = getPlans();
+      delete plans[name];
+
+      try {
+        putPlans(plans);
+      } catch(e) {
+        alert("Impossibile eliminare la scheda.");
+        return;
+      }
+
+      activePlan = "";
+      w = blank();
+
+      saveW();
+      render();
+    });
 
     function open() { panel.classList.add("gwk-open"); overlay.classList.add("gwk-open"); }
     function close() { panel.classList.remove("gwk-open"); overlay.classList.remove("gwk-open"); }
@@ -168,16 +428,38 @@
     function renderHist() {
       var all = history();
       if (!all.length) { hist.innerHTML = ""; return; }
-      var items = all.slice().reverse().slice(0, 15).map(function (it) {
+      var items = all.slice().reverse().slice(0, 15).map(function (it, reverseIndex) {
+        var historyIndex = all.length - 1 - reverseIndex;
         var d = new Date(it.endedAt || it.startedAt).toLocaleDateString("it-IT");
         var lis = (it.exercises || []).map(function (ex) {
           var sets = (ex.sets || []).map(function (s) { return (s.reps || "-") + "×" + (s.kg || "-") + "kg"; }).join(", ");
           return "<li><strong>" + esc(ex.name) + "</strong><br>" + esc(sets) + "</li>";
         }).join("");
-        return "<details><summary><strong>" + esc(it.name || "Allenamento") + "</strong><span>" + d + "</span></summary><ul>" + lis + "</ul></details>";
+        return '<details><summary><strong>' + esc(it.name || "Allenamento") +
+          '</strong><span>' + d + '</span></summary><ul>' + lis +
+          '</ul><button type="button" class="gwk-hist-delete" data-history-index="' +
+          historyIndex + '">🗑 ELIMINA ALLENAMENTO</button></details>';
       }).join("");
       hist.innerHTML = "<h3>STORICO ALLENAMENTI</h3>" + items;
     }
+
+    hist.addEventListener("click", function(ev) {
+      var btn = ev.target.closest(".gwk-hist-delete");
+      if (!btn) return;
+
+      if (!confirm("Eliminare questo allenamento dallo storico?")) return;
+
+      var all = history();
+      var index = Number(btn.getAttribute("data-history-index"));
+
+      if (!Number.isInteger(index) || index < 0 || index >= all.length) {
+        return;
+      }
+
+      all.splice(index, 1);
+      wr(HIS, all);
+      renderHist();
+    });
 
     function render() {
       if (document.activeElement !== nameIn) nameIn.value = w.name || "";
@@ -187,6 +469,7 @@
       finish.style.display = w.exercises.length ? "" : "none";
       list.innerHTML = w.exercises.map(renderEx).join("");
       renderHist();
+      refreshPlans();
       refreshButtons();
     }
 
@@ -244,11 +527,27 @@
       var done = JSON.parse(JSON.stringify(w));
       done.name = (w.name || "").trim() || ("Allenamento " + new Date().toLocaleDateString("it-IT"));
       done.endedAt = Date.now();
+      // Prima conserva la scheda riutilizzabile.
+      if (!saveCurrentPlan(false)) return;
+
+      // Registra separatamente la sessione conclusa.
       all.push(done);
-      wr(HIS, all);
-      w = blank();
+      try {
+        wr(HIS, all);
+      } catch(e) {
+        alert("Impossibile registrare lo storico.");
+        return;
+      }
+
+      // Mantiene esercizi, serie, ripetizioni e pesi.
+      w = copyWorkout(done);
+      w.startedAt = Date.now();
+      delete w.endedAt;
+
       saveW();
       render();
+
+      alert("Allenamento terminato! La scheda rimane disponibile e modificabile.");
     });
 
     fab.addEventListener("click", open);
