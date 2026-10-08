@@ -1437,7 +1437,25 @@ function openExercise(
 }
 
 
+
+window.GymGiuseExerciseMedia = function(id) {
+  const exercise = exercises.find(item => String(item.id) === String(id));
+  if (!exercise) return null;
+
+  return {
+    image: mediaUrl(exercise.image),
+    gif: mediaUrl(exercise.gif_url)
+  };
+};
+
+window.GymGiuseOpenExerciseById = function(id) {
+  const exercise = exercises.find(item => String(item.id) === String(id));
+  if (!exercise) return;
+  openExercise(exercise);
+};
+
 function closeExercise() {
+
 
   stopActiveMedia();
 

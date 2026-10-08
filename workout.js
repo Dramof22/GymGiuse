@@ -80,7 +80,10 @@
     ".gwk-empty strong{display:block;color:#fff;margin-bottom:4px}",
     ".gwk-ex{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:14px;margin:12px 0}",
     ".gwk-ex-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}",
-    ".gwk-ex-head h3{margin:0;font-size:16px;color:#fff;text-transform:uppercase}",
+    ".gwk-ex-head h3{margin:0;font-size:16px;color:#fff;text-transform:uppercase;flex:1}",
+    ".gwk-ex-tools{display:flex;align-items:center;gap:7px}",
+    ".gwk-preview{width:38px;height:38px;padding:0;border:1px solid #444;border-radius:8px;background:#0b0b0b;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#22c55e}",
+    ".gwk-preview img{width:100%;height:100%;object-fit:cover;display:block}",
     ".gwk-x{background:#2a2a2a;border:0;color:#fff;width:32px;height:32px;border-radius:8px;font-size:20px;cursor:pointer;flex:0 0 auto}",
     ".gwk-x:hover{background:#b00020}",
     ".gwk-set{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:8px;align-items:end;margin-bottom:8px}",
@@ -418,8 +421,16 @@
           '<label><span>KG</span><input class="gwk-in" data-f="kg" data-e="' + i + '" data-s="' + j + '" type="text" inputmode="decimal" value="' + esc(s.kg) + '" autocomplete="off"></label>' +
           '<button type="button" class="gwk-x" data-act="delset" data-e="' + i + '" data-s="' + j + '" aria-label="Elimina serie">×</button></div>';
       }).join("");
+      var media = window.GymGiuseExerciseMedia ? window.GymGiuseExerciseMedia(ex.id) : null;
+      var preview = media && media.image
+        ? '<img src="' + esc(media.image) + '" alt="' + esc(ex.name) + '">'
+        : '▶';
+
       return '<article class="gwk-ex"><div class="gwk-ex-head"><h3>' + esc(ex.name) + '</h3>' +
-        '<button type="button" class="gwk-x" data-act="delex" data-e="' + i + '" aria-label="Elimina esercizio">×</button></div>' +
+        '<div class="gwk-ex-tools">' +
+        '<button type="button" class="gwk-preview" data-act="viewex" data-e="' + i + '" aria-label="Visualizza esercizio">' + preview + '</button>' +
+        '<button type="button" class="gwk-x" data-act="delex" data-e="' + i + '" aria-label="Elimina esercizio">×</button>' +
+        '</div></div>' +
         sets +
         '<button type="button" class="gwk-addset" data-act="addset" data-e="' + i + '">+ AGGIUNGI SERIE</button>' +
         compareHtml(ex) + '</article>';
@@ -512,6 +523,14 @@
       var ex = w.exercises[i];
       var act = b.getAttribute("data-act");
       if (!ex) return;
+      if (act === "viewex") {
+        if (window.GymGiuseOpenExerciseById) {
+          close();
+          window.GymGiuseOpenExerciseById(ex.id);
+        }
+        return;
+      }
+
       if (act === "addset") ex.sets.push(bset());
       else if (act === "delset") {
         ex.sets.splice(Number(b.getAttribute("data-s")), 1);
