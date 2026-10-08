@@ -1,0 +1,9 @@
+
+# Backup GymGiuse
+backup-*/
+backup-mobile-*/
+*.backup-*
+*.sicurezza
+*.prima-fix-*
+*.tmp
+.DS_Store

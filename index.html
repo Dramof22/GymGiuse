@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071a33">
+
+  <title>GymGiuse</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="workout.css?v=1791387004">
+  <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body>
+
+<header class="hero">
+
+  <nav class="topbar">
+    <div class="logo">
+      Gym<span>Giuse</span>
+    </div>
+
+    <div class="logo-icon">G</div>
+  </nav>
+
+  <div class="hero-content">
+
+    <div class="eyebrow">
+      IL TUO ATLANTE FITNESS
+    </div>
+
+    <h1>
+      Allenati meglio.<br>
+      Conosci ogni movimento.
+    </h1>
+
+    <p>
+      Cerca l'esercizio, guarda il movimento
+      e scopri quali muscoli stai allenando.
+    </p>
+
+  </div>
+
+</header>
+
+
+<main>
+
+  <section class="controls">
+
+    <div class="search-box">
+
+      <span class="search-icon">⌕</span>
+
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Cerca un esercizio..."
+        autocomplete="off"
+      >
+
+    </div>
+
+
+    <div
+      id="muscleFilters"
+      class="muscle-filters"
+    ></div>
+
+
+    <div class="select-row">
+
+      <select id="equipmentFilter">
+        <option value="all">
+          Tutte le attrezzature
+        </option>
+      </select>
+
+
+      <select id="sortFilter">
+
+        <option value="az">
+          Nome A-Z
+        </option>
+
+        <option value="za">
+          Nome Z-A
+        </option>
+
+      </select>
+
+    </div>
+
+  </section>
+
+
+  <section class="library">
+
+    <div class="library-title">
+
+      <div>
+
+        <span class="small-title">
+          LIBRERIA
+        </span>
+
+        <h2>Esercizi</h2>
+
+      </div>
+
+      <span id="exerciseCount">
+        Caricamento...
+      </span>
+
+    </div>
+
+
+    <div class="tip">
+
+      <span>▶</span>
+
+      <p>
+        Tocca l'immagine di un esercizio
+        per avviare l'animazione.
+      </p>
+
+    </div>
+
+
+    <div id="loading" class="loading">
+
+      <div class="spinner"></div>
+
+      <p>
+        Caricamento esercizi GymGiuse...
+      </p>
+
+    </div>
+
+
+    <div
+      id="exerciseGrid"
+      class="exercise-grid"
+    ></div>
+
+
+    <button
+      id="loadMore"
+      class="load-more hidden"
+    >
+      Mostra altri esercizi
+    </button>
+
+
+    <div
+      id="emptyState"
+      class="empty hidden"
+    >
+
+      <div>🔎</div>
+
+      <h3>
+        Nessun esercizio trovato
+      </h3>
+
+      <p>
+        Prova un'altra ricerca.
+      </p>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<div
+  id="exerciseModal"
+  class="modal hidden"
+>
+
+  <div
+    id="modalBackground"
+    class="modal-background"
+  ></div>
+
+
+  <article class="modal-sheet">
+
+    <button
+      id="closeModal"
+      class="close-modal"
+    >
+      ×
+    </button>
+
+
+    <div
+      id="modalMedia"
+      class="modal-media"
+    ></div>
+
+
+    <div class="modal-content">
+
+      <div
+        id="modalMuscle"
+        class="target-pill"
+      ></div>
+
+
+      <h2 id="modalTitle"></h2>
+
+
+      <p
+        id="modalDescription"
+        class="modal-description"
+      ></p>
+
+
+      <div class="facts">
+
+        <div class="fact">
+
+          <span>🎯</span>
+
+          <div>
+            <small>
+              Muscolo principale
+            </small>
+
+            <strong id="modalTarget"></strong>
+          </div>
+
+        </div>
+
+
+        <div class="fact">
+
+          <span>🏋️</span>
+
+          <div>
+            <small>
+              Attrezzatura
+            </small>
+
+            <strong id="modalEquipment"></strong>
+          </div>
+
+        </div>
+
+
+        <div class="fact">
+
+          <span>📍</span>
+
+          <div>
+            <small>
+              Zona
+            </small>
+
+            <strong id="modalCategory"></strong>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <section class="detail-section">
+
+        <h3>
+          Come eseguirlo
+        </h3>
+
+        <ol id="modalInstructions"></ol>
+
+      </section>
+
+
+      <section class="detail-section">
+
+        <h3>
+          Muscoli secondari
+        </h3>
+
+        <div
+          id="secondaryMuscles"
+          class="secondary-muscles"
+        ></div>
+
+      </section>
+
+
+      <div class="movement-info">
+        ▶ Tocca l'immagine in alto per
+        avviare o fermare il movimento.
+      </div>
+
+    </div>
+
+  </article>
+
+</div>
+
+
+<footer>
+
+  <strong>
+    GymGiuse
+  </strong>
+
+  <p>
+    Conosci il movimento.
+    Allena il muscolo.
+  </p>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+  <script src="workout.js?v=1791387348"></script>
+</body>
+</html>
