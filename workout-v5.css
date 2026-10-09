@@ -822,11 +822,11 @@ button.gg-add-workout.ggw-added {
   }
 }
 
-/* FIX V66 — impedisce alla Home di spostarsi orizzontalmente su iPhone */
+/* FIX V67 — blocca lo scorrimento orizzontale su mobile */
 @media (max-width: 640px) {
   html,
   body {
-    overflow-x: clip !important;
+    overflow-x: hidden !important;
     overscroll-behavior-x: none !important;
   }
 }
