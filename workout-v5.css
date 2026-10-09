@@ -595,15 +595,24 @@ button.gg-add-workout.ggw-added {
 
 
 /* =========================================================
-   SAFARI MOBILE V60 — EDGE TO EDGE
+   SAFARI MOBILE V64 — SINGLE SCROLL ARCHITECTURE
    ========================================================= */
 
 @media (max-width: 640px) {
 
   /*
-   * Non fissiamo più il documento.
-   * Safari 26 ha problemi di compositing con body/pannelli fixed
-   * vicino alla toolbar flottante.
+   * Quando la Scheda è aperta il fondale della pagina è nero.
+   * Così Safari non può mostrare il bianco della Home attraverso
+   * la propria toolbar traslucida.
+   */
+  html.ggw-page-locked,
+  html.ggw-page-locked body {
+    background: #0b0b0b !important;
+  }
+
+  /*
+   * Su mobile NON fissiamo il body.
+   * La posizione corrente della Home resta invariata.
    */
   html.ggw-page-locked,
   body.ggw-page-locked {
@@ -614,16 +623,46 @@ button.gg-add-workout.ggw-added {
   body.ggw-page-locked {
     position: static !important;
     top: auto !important;
+    left: auto !important;
+    right: auto !important;
     width: auto !important;
   }
 
   /*
-   * Layer assoluto nel documento.
-   * 100lvh usa il viewport grande e consente allo sfondo del drawer
-   * di proseguire dietro la UI traslucida di Safari.
+   * OVERLAY:
+   * copre anche la zona dietro la toolbar Safari.
+   * Non è scrollabile e non usa blur: niente layer grafici
+   * separati che Safari possa "congelare".
+   */
+  .ggw-overlay {
+    position: absolute !important;
+
+    top: var(--ggw-page-top, 0px) !important;
+    left: 0 !important;
+    right: 0 !important;
+
+    width: 100% !important;
+    height: 100lvh !important;
+    min-height: 100lvh !important;
+
+    background: #0b0b0b !important;
+
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /*
+   * PANNELLO:
+   *
+   * È L'UNICO ELEMENTO CHE SCORRE.
+   *
+   * 100lvh fa continuare lo stesso layer fisico anche dietro
+   * alla toolbar Safari. Non esiste più un secondo scroller
+   * dentro .ggw-body.
    */
   .ggw-panel {
     position: absolute !important;
+
     top: var(--ggw-page-top, 0px) !important;
     left: 0 !important;
     right: auto !important;
@@ -632,14 +671,28 @@ button.gg-add-workout.ggw-added {
     max-width: none !important;
 
     height: 100lvh !important;
-    min-height: 100vh !important;
-    max-height: none !important;
+    min-height: 100lvh !important;
+    max-height: 100lvh !important;
 
-    background: var(--ggw-bg) !important;
+    display: block !important;
+
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important;
+
+    background: #0b0b0b !important;
     box-shadow: none !important;
 
     transform: translate3d(100%, 0, 0);
     transition: transform .32s cubic-bezier(.22,.8,.22,1);
+
+    /*
+     * Evitiamo un ulteriore compositing layer/clipping interno.
+     */
+    contain: none !important;
   }
 
   .ggw-panel.is-open {
@@ -647,106 +700,72 @@ button.gg-add-workout.ggw-added {
   }
 
   /*
-   * Overlay segue lo stesso spazio del drawer.
-   * Niente backdrop-filter su Safari mobile: evita un noto problema
-   * di compositing/tint della toolbar di Safari 26.
-   */
-  .ggw-overlay {
-    position: absolute !important;
-    top: var(--ggw-page-top, 0px) !important;
-    left: 0 !important;
-    right: 0 !important;
-
-    width: 100% !important;
-    height: 100lvh !important;
-
-    background: rgba(3,14,30,.62) !important;
-
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-  }
-
-  /*
-   * La SAFE AREA protegge testo e pulsanti,
-   * ma NON ferma lo sfondo.
+   * HEADER:
+   * rimane fermo in alto mentre TUTTO il resto della Scheda scorre.
    */
   .ggw-head {
-    padding-top: calc(12px + env(safe-area-inset-top)) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 20 !important;
+
+    min-height: 68px !important;
+
+    padding:
+      calc(12px + env(safe-area-inset-top))
+      12px
+      12px
+      14px !important;
+
+    background: rgba(11,11,11,.97) !important;
+
+    -webkit-backdrop-filter: blur(16px) !important;
+    backdrop-filter: blur(16px) !important;
   }
 
+  /*
+   * BODY:
+   * NON deve più scrollare autonomamente.
+   * Fa semplicemente parte del grande scroll di .ggw-panel.
+   */
   .ggw-body {
-    padding-bottom:
-      calc(54px + env(safe-area-inset-bottom)) !important;
+    display: block !important;
 
+    min-height: auto !important;
+    height: auto !important;
+
+    overflow: visible !important;
+
+    -webkit-overflow-scrolling: auto !important;
+    overscroll-behavior: auto !important;
+    touch-action: auto !important;
+
+    padding:
+      13px
+      12px
+      calc(190px + env(safe-area-inset-bottom))
+      12px !important;
+
+    /*
+     * Il padding finale permette a STORICO e TERMINA ALLENAMENTO
+     * di essere portati MOLTO sopra la toolbar Safari.
+     */
     scroll-padding-bottom:
-      calc(54px + env(safe-area-inset-bottom)) !important;
+      calc(190px + env(safe-area-inset-bottom)) !important;
   }
 
+  /*
+   * Toast ancorato al contenuto senza interferire con lo scroll.
+   */
   .ggw-toast {
-    bottom: calc(16px + env(safe-area-inset-bottom)) !important;
-  }
-}
-
-/* =========================================================
-   SAFARI V61 — REMOVE HOME STRIP UNDER BROWSER BAR
-   ========================================================= */
-
-@media (max-width: 640px) {
-  html.ggw-page-locked,
-  html.ggw-page-locked body {
-    background: #0b0b0b !important;
+    bottom: calc(110px + env(safe-area-inset-bottom)) !important;
   }
 
   /*
-   * Il drawer deve proseguire oltre la zona visibile.
-   * Il margine extra resta dietro la toolbar di Safari.
+   * Il pulsante flottante della Home non deve comparire
+   * sopra la Scheda aperta.
    */
-  .ggw-panel {
-    height: calc(100lvh + 160px) !important;
-    min-height: calc(100lvh + 160px) !important;
-  }
-
-  .ggw-overlay {
-    height: calc(100lvh + 160px) !important;
-  }
-}
-
-/* =========================================================
-   SAFARI V62 — SCROLL FINO A TERMINA ALLENAMENTO
-   ========================================================= */
-
-@media (max-width: 640px) {
-
-  /*
-   * Il PANNELLO interattivo usa il viewport dinamico reale.
-   * Così il fondo dello scroll non finisce dietro la toolbar Safari.
-   */
-  .ggw-panel {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
-    max-height: 100dvh !important;
-  }
-
-  /*
-   * Lo sfondo/overlay invece continua più in basso:
-   * mantiene nero lo spazio dietro la toolbar Safari
-   * senza aumentare l'altezza della zona scrollabile.
-   */
-  .ggw-overlay {
-    height: calc(100lvh + 160px) !important;
-    min-height: calc(100lvh + 160px) !important;
-  }
-
-  /*
-   * Spazio finale reale dentro lo scroll.
-   * Permette a Storico e Termina allenamento di salire
-   * completamente sopra la barra flottante di Safari.
-   */
-  .ggw-body {
-    padding-bottom:
-      calc(150px + env(safe-area-inset-bottom)) !important;
-
-    scroll-padding-bottom:
-      calc(150px + env(safe-area-inset-bottom)) !important;
+  body.ggw-page-locked .ggw-fab {
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
 }
