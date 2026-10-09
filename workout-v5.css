@@ -491,8 +491,22 @@ button.gg-add-workout.ggw-added {
 }
 
 @media (max-width: 640px) {
+  /*
+   * Overlay mobile:
+   * deve oscurare e sfocare la HOME,
+   * non creare una fascia nera sopra il pannello.
+   */
   .ggw-overlay {
-    background: #0b0b0b;
+    background: rgba(3, 14, 30, .58);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+  }
+
+  .ggw-overlay:not(.is-open) {
+    opacity: 0;
+    pointer-events: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
   .ggw-panel {
     left: 0;
