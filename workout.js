@@ -400,8 +400,44 @@
       render();
     });
 
-    function open() { panel.classList.add("gwk-open"); overlay.classList.add("gwk-open"); }
-    function close() { panel.classList.remove("gwk-open"); overlay.classList.remove("gwk-open"); }
+    var pageScrollY = 0;
+
+    function lockPageScroll() {
+      pageScrollY = window.scrollY || window.pageYOffset || 0;
+
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.top = "-" + pageScrollY + "px";
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+    }
+
+    function unlockPageScroll() {
+      document.documentElement.style.overflow = "";
+
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+
+      window.scrollTo(0, pageScrollY);
+    }
+
+    function open() {
+      lockPageScroll();
+      panel.classList.add("gwk-open");
+      overlay.classList.add("gwk-open");
+    }
+
+    function close() {
+      panel.classList.remove("gwk-open");
+      overlay.classList.remove("gwk-open");
+      unlockPageScroll();
+    }
 
     function refreshButtons() {
       var btns = document.querySelectorAll("button.gg-add-workout");

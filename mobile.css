@@ -311,3 +311,20 @@ svg {
   }
 
 }
+
+/* Blocca lo scroll-through della Scheda */
+@media (max-width: 640px) {
+  .gwk-panel {
+    overscroll-behavior: none;
+  }
+
+  .gwk-body {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  .gwk-overlay {
+    touch-action: none;
+  }
+}
