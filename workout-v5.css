@@ -592,3 +592,21 @@ button.gg-add-workout.ggw-added {
     transition-duration: .01ms !important;
   }
 }
+
+
+/* =========================================================
+   SAFARI V53 — FIX FASCIA SUPERIORE / OVERLAY
+   ========================================================= */
+
+.ggw-overlay {
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .ggw-panel {
+    top: 0 !important;
+  }
+}

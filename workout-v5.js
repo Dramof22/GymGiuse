@@ -309,9 +309,19 @@
     function updateViewport() {
       var vv = window.visualViewport;
       var height = vv ? vv.height : window.innerHeight;
-      var top = vv ? vv.offsetTop : 0;
-      document.documentElement.style.setProperty("--ggw-vh", Math.round(height) + "px");
-      document.documentElement.style.setProperty("--ggw-vtop", Math.round(top) + "px");
+
+      /*
+       * Safari iOS:
+       * usiamo VisualViewport solo per l'altezza disponibile.
+       * Non spostiamo verticalmente il pannello con offsetTop,
+       * perché durante scroll/transizioni può creare una fascia
+       * scoperta sopra al pannello.
+       */
+      document.documentElement.style.setProperty(
+        "--ggw-vh",
+        Math.round(height) + "px"
+      );
+      document.documentElement.style.setProperty("--ggw-vtop", "0px");
     }
     function lockPage() {
       if (document.body.classList.contains("ggw-page-locked")) return;
