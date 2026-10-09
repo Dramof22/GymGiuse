@@ -821,3 +821,12 @@ button.gg-add-workout.ggw-added {
     min-height: calc(100lvh + 240px) !important;
   }
 }
+
+/* FIX V66 — impedisce alla Home di spostarsi orizzontalmente su iPhone */
+@media (max-width: 640px) {
+  html,
+  body {
+    overflow-x: clip !important;
+    overscroll-behavior-x: none !important;
+  }
+}
