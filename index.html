@@ -1,327 +1,127 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071a33">
-
-  <title>GymGiuse</title>
-
-  <link rel="stylesheet" href="style.css?v=20261009-v60">
-  <link rel="stylesheet" href="workout.css?v=1791387004">
-  <link rel="stylesheet" href="mobile.css">
-  <link rel="stylesheet" href="workout-v5.css?v=20261009-v68">
+  <meta name="theme-color" content="#080b10">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GymGiusim">
+  <meta name="description" content="Le tue schede di allenamento, semplici e modificabili da iPhone.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="gymgiusim.css?v=1">
+  <title>GymGiusim</title>
 </head>
-
 <body>
-
-<header class="hero">
-
-  <nav class="topbar">
-    <div class="logo">
-      Gym<span>Giuse</span>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark lotus-mark" aria-label="Fiore di loto">
+        <svg viewBox="0 0 64 48" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M32 36 C18 30 12 19 17 7 C28 13 33 24 32 36"/>
+            <path d="M32 36 C46 30 52 19 47 7 C36 13 31 24 32 36"/>
+            <path d="M32 36 C22 25 23 12 32 3 C41 12 42 25 32 36"/>
+            <path d="M11 29 C17 36 24 39 32 39 C40 39 47 36 53 29"/>
+          </g>
+        </svg>
+        <span class="lotus-s">s</span>
+      </span>
+      <div><strong>GymGiusim</strong><small>LA TUA SCHEDA</small></div>
     </div>
-
-    <div class="logo-icon">G</div>
-  </nav>
-
-  <div class="hero-content">
-
-    <div class="eyebrow">
-      IL TUO ATLANTE FITNESS
+    <div class="header-actions">
+      <button class="button button-quiet" id="historyButton" type="button">Storico</button>
+      <button class="button button-quiet" id="backupButton" type="button" title="Esporta backup">Backup</button>
     </div>
+  </header>
 
-    <h1>
-      Allenati meglio.<br>
-      Conosci ogni movimento.
-    </h1>
+  <main class="app-main">
+    <section class="welcome-card" aria-labelledby="welcomeTitle">
+      <p class="welcome-eyebrow">IL TUO SPAZIO · IL TUO ALLENAMENTO</p>
+      <h1 id="welcomeTitle">Prepara la tua scheda personalizzata</h1>
+      <p class="welcome-description">I tuoi esercizi, i tuoi pesi, i tuoi progressi.</p>
+    </section>
 
-    <p>
-      Cerca l'esercizio, guarda il movimento
-      e scopri quali muscoli stai allenando.
-    </p>
 
+    <section class="plan-toolbar" aria-label="Gestione schede">
+      <div class="plan-select-wrap">
+        <label for="planSelect">LA MIA SCHEDA</label>
+        <select id="planSelect" aria-label="Scegli una scheda"></select>
+      </div>
+      <button class="button button-accent" id="newPlanButton" type="button">＋ Nuova</button>
+    </section>
+
+    <section class="plan-name-row">
+      <input id="planName" type="text" maxlength="70" aria-label="Nome della scheda" placeholder="Dai un nome alla scheda" autocomplete="off">
+      <button class="icon-button" id="renameHint" type="button" aria-label="Rinomina scheda" title="Modifica il nome nel campo">✎</button>
+      <button class="icon-button danger-text" id="deletePlanButton" type="button" aria-label="Elimina scheda" title="Elimina scheda">⌫</button>
+    </section>
+    <div class="save-line"><span class="save-dot"></span><span id="saveStatus" aria-live="polite">Salvato automaticamente sul telefono</span></div>
+
+    <section class="search-section" aria-label="Cerca esercizi">
+      <label for="exerciseSearch">AGGIUNGI UN ESERCIZIO</label>
+      <div class="search-box"><span aria-hidden="true">⌕</span><input id="exerciseSearch" type="search" placeholder="Cerca: panca, lat machine, squat…" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="clearSearch" class="clear-search" type="button" aria-label="Cancella ricerca" hidden>×</button></div>
+      <p class="search-hint" id="catalogStatus">Scrivi almeno 2 lettere. Cerca in italiano o in inglese.</p>
+      <div id="searchResults" class="search-results" hidden></div>
+    </section>
+
+    <section class="workout-section">
+      <div class="section-heading"><div><span class="eyebrow">ALLENAMENTO</span><h1 id="workoutHeading">La tua scheda</h1></div><span id="exerciseTotal" class="count-pill">0 esercizi</span></div>
+      <div id="emptyWorkout" class="empty-card"><div class="empty-icon">＋</div><strong>La scheda è vuota</strong><p>Cerca un esercizio qui sopra e premi il pulsante + per aggiungerlo.</p></div>
+      <div id="workoutList" class="workout-list"></div>
+      <div class="workout-footer">
+        <button class="button button-outline full-button" id="addCustomExerciseButton" type="button">＋ Crea esercizio personalizzato</button>
+        <button class="button button-finish full-button" id="finishWorkoutButton" type="button">TERMINA ALLENAMENTO</button>
+      </div>
+    </section>
+
+    <section class="utility-row">
+      <button class="text-button" id="startWorkoutButton" type="button">▶ Inizia / riprendi allenamento</button>
+      <button class="text-button" id="exportButton" type="button">Esporta scheda</button>
+    </section>
+
+    <p class="privacy-note">Le schede restano in questo browser sul tuo iPhone. Non serve un account e non ci sono abbonamenti.</p>
+  </main>
+
+  <div id="detailDialog" class="dialog-backdrop" hidden>
+    <article class="dialog detail-dialog" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+      <button class="dialog-close" type="button" data-close-dialog aria-label="Chiudi">×</button>
+      <div id="detailMedia" class="detail-media"></div>
+      <div class="dialog-content">
+        <p id="detailMuscle" class="eyebrow"></p>
+        <h2 id="detailTitle"></h2>
+        <p id="detailEquipment" class="detail-meta"></p>
+        <p id="detailDescription" class="detail-description"></p>
+        <section class="instructions-block"><h3>Come eseguirlo</h3><ol id="detailInstructions"></ol></section>
+        <section class="instructions-block"><h3>Muscoli coinvolti</h3><p id="detailMuscles"></p></section>
+        <button id="detailAddButton" class="button button-accent full-button" type="button">＋ Aggiungi alla scheda</button>
+      </div>
+    </article>
   </div>
 
-</header>
-
-
-<main>
-
-  <section class="controls">
-
-    <div class="search-box">
-
-      <span class="search-icon">⌕</span>
-
-      <input
-        id="searchInput"
-        type="search"
-        placeholder="Cerca un esercizio..."
-        autocomplete="off"
-      >
-
-    </div>
-
-
-    <div
-      id="muscleFilters"
-      class="muscle-filters"
-    ></div>
-
-
-    <div class="select-row">
-
-      <select id="equipmentFilter">
-        <option value="all">
-          Tutte le attrezzature
-        </option>
-      </select>
-
-
-      <select id="sortFilter">
-
-        <option value="az">
-          Nome A-Z
-        </option>
-
-        <option value="za">
-          Nome Z-A
-        </option>
-
-      </select>
-
-    </div>
-
-  </section>
-
-
-  <section class="library">
-
-    <div class="library-title">
-
-      <div>
-
-        <span class="small-title">
-          LIBRERIA
-        </span>
-
-        <h2>Esercizi</h2>
-
-      </div>
-
-      <span id="exerciseCount">
-        Caricamento...
-      </span>
-
-    </div>
-
-
-    <div class="tip">
-
-      <span>▶</span>
-
-      <p>
-        Tocca l'immagine di un esercizio
-        per avviare l'animazione.
-      </p>
-
-    </div>
-
-
-    <div id="loading" class="loading">
-
-      <div class="spinner"></div>
-
-      <p>
-        Caricamento esercizi GymGiuse...
-      </p>
-
-    </div>
-
-
-    <div
-      id="exerciseGrid"
-      class="exercise-grid"
-    ></div>
-
-
-    <button
-      id="loadMore"
-      class="load-more hidden"
-    >
-      Mostra altri esercizi
-    </button>
-
-
-    <div
-      id="emptyState"
-      class="empty hidden"
-    >
-
-      <div>🔎</div>
-
-      <h3>
-        Nessun esercizio trovato
-      </h3>
-
-      <p>
-        Prova un'altra ricerca.
-      </p>
-
-    </div>
-
-  </section>
-
-</main>
-
-
-<div
-  id="exerciseModal"
-  class="modal hidden"
->
-
-  <div
-    id="modalBackground"
-    class="modal-background"
-  ></div>
-
-
-  <article class="modal-sheet">
-
-    <button
-      id="closeModal"
-      class="close-modal"
-    >
-      ×
-    </button>
-
-
-    <div
-      id="modalMedia"
-      class="modal-media"
-    ></div>
-
-
-    <div class="modal-content">
-
-      <div
-        id="modalMuscle"
-        class="target-pill"
-      ></div>
-
-
-      <h2 id="modalTitle"></h2>
-
-
-      <p
-        id="modalDescription"
-        class="modal-description"
-      ></p>
-
-
-      <div class="facts">
-
-        <div class="fact">
-
-          <span>🎯</span>
-
-          <div>
-            <small>
-              Muscolo principale
-            </small>
-
-            <strong id="modalTarget"></strong>
-          </div>
-
-        </div>
-
-
-        <div class="fact">
-
-          <span>🏋️</span>
-
-          <div>
-            <small>
-              Attrezzatura
-            </small>
-
-            <strong id="modalEquipment"></strong>
-          </div>
-
-        </div>
-
-
-        <div class="fact">
-
-          <span>📍</span>
-
-          <div>
-            <small>
-              Zona
-            </small>
-
-            <strong id="modalCategory"></strong>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <section class="detail-section">
-
-        <h3>
-          Come eseguirlo
-        </h3>
-
-        <ol id="modalInstructions"></ol>
-
-      </section>
-
-
-      <section class="detail-section">
-
-        <h3>
-          Muscoli secondari
-        </h3>
-
-        <div
-          id="secondaryMuscles"
-          class="secondary-muscles"
-        ></div>
-
-      </section>
-
-
-      <div class="movement-info">
-        ▶ Tocca l'immagine in alto per
-        avviare o fermare il movimento.
-      </div>
-
-    </div>
-
-  </article>
-
-</div>
-
-
-<footer>
-
-  <strong>
-    GymGiuse
-  </strong>
-
-  <p>
-    Conosci il movimento.
-    Allena il muscolo.
-  </p>
-
-</footer>
-
-
-<script src="script.js?v=20261008-it2"></script>
-
-  <script src="workout-v5.js?v=20261009-v65"></script>
+  <div id="historyDialog" class="dialog-backdrop" hidden>
+    <article class="dialog history-dialog" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+      <div class="dialog-topline"><div><p class="eyebrow">I TUOI ALLENAMENTI</p><h2 id="historyTitle">Storico</h2></div><button class="dialog-close inline-close" type="button" data-close-dialog aria-label="Chiudi">×</button></div>
+      <div id="historyList" class="history-list"></div>
+      <div class="dialog-bottom-actions"><button id="exportBackupButton" class="button button-outline full-button" type="button">Esporta backup completo</button><label class="button button-outline full-button import-label">Importa backup<input id="importBackupInput" type="file" accept="application/json,.json" hidden></label></div>
+    </article>
+  </div>
+
+  <div id="customDialog" class="dialog-backdrop" hidden>
+    <form id="customExerciseForm" class="dialog custom-dialog" role="dialog" aria-modal="true" aria-labelledby="customTitle">
+      <button class="dialog-close" type="button" data-close-dialog aria-label="Chiudi">×</button>
+      <p class="eyebrow">ESERCIZIO PERSONALIZZATO</p><h2 id="customTitle">Crea esercizio</h2>
+      <label>Nome<input id="customName" required maxlength="100" placeholder="Es. Chest press convergente"></label>
+      <label>Muscoli allenati<input id="customMuscle" maxlength="120" placeholder="Es. Pettorali, tricipiti"></label>
+      <label>Attrezzatura<input id="customEquipment" maxlength="120" placeholder="Es. Macchina"></label>
+      <label>Note / svolgimento<textarea id="customNotes" rows="3" placeholder="Note personali o indicazioni di esecuzione"></textarea></label>
+      <button class="button button-accent full-button" type="submit">Salva e aggiungi</button>
+    </form>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <input id="backupFileInput" type="file" accept="application/json,.json" hidden>
+  <script src="gymgiusim.js?v=1"></script>
 </body>
 </html>

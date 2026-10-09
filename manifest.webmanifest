@@ -1,0 +1,13 @@
+{
+  "name": "GymGiusim — Schede palestra",
+  "short_name": "GymGiusim",
+  "description": "Schede di allenamento rapide e modificabili.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080b10",
+  "theme_color": "#080b10",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
