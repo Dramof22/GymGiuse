@@ -710,3 +710,43 @@ button.gg-add-workout.ggw-added {
     height: calc(100lvh + 160px) !important;
   }
 }
+
+/* =========================================================
+   SAFARI V62 — SCROLL FINO A TERMINA ALLENAMENTO
+   ========================================================= */
+
+@media (max-width: 640px) {
+
+  /*
+   * Il PANNELLO interattivo usa il viewport dinamico reale.
+   * Così il fondo dello scroll non finisce dietro la toolbar Safari.
+   */
+  .ggw-panel {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  /*
+   * Lo sfondo/overlay invece continua più in basso:
+   * mantiene nero lo spazio dietro la toolbar Safari
+   * senza aumentare l'altezza della zona scrollabile.
+   */
+  .ggw-overlay {
+    height: calc(100lvh + 160px) !important;
+    min-height: calc(100lvh + 160px) !important;
+  }
+
+  /*
+   * Spazio finale reale dentro lo scroll.
+   * Permette a Storico e Termina allenamento di salire
+   * completamente sopra la barra flottante di Safari.
+   */
+  .ggw-body {
+    padding-bottom:
+      calc(150px + env(safe-area-inset-bottom)) !important;
+
+    scroll-padding-bottom:
+      calc(150px + env(safe-area-inset-bottom)) !important;
+  }
+}
