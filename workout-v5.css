@@ -822,11 +822,12 @@ button.gg-add-workout.ggw-added {
   }
 }
 
-/* FIX V67 — blocca lo scorrimento orizzontale su mobile */
+/* FIX V68 — blocca lo scorrimento orizzontale su mobile */
 @media (max-width: 640px) {
   html,
   body {
     overflow-x: hidden !important;
     overscroll-behavior-x: none !important;
+    touch-action: pan-y !important;
   }
 }
