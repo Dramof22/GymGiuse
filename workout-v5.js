@@ -306,54 +306,117 @@
       }, 2200);
     }
 
+    function isMobileWorkout() {
+      return window.matchMedia("(max-width: 640px)").matches;
+    }
+
     function updateViewport() {
+      if (isMobileWorkout()) {
+        /*
+         * Safari iOS 26:
+         * il drawer mobile NON segue il VisualViewport.
+         * Lo ancoriamo alla posizione reale del documento.
+         */
+        document.documentElement.style.setProperty(
+          "--ggw-page-top",
+          Math.round(lockedScrollY || window.scrollY || window.pageYOffset || 0) + "px"
+        );
+
+        document.documentElement.style.removeProperty("--ggw-vh");
+        document.documentElement.style.setProperty("--ggw-vtop", "0px");
+        return;
+      }
+
+      /* Desktop: manteniamo il comportamento già stabile. */
       var vv = window.visualViewport;
       var height = vv ? vv.height : window.innerHeight;
 
-      /*
-       * Safari iOS:
-       * usiamo VisualViewport solo per l'altezza disponibile.
-       * Non spostiamo verticalmente il pannello con offsetTop,
-       * perché durante scroll/transizioni può creare una fascia
-       * scoperta sopra al pannello.
-       */
       document.documentElement.style.setProperty(
         "--ggw-vh",
         Math.round(height) + "px"
       );
       document.documentElement.style.setProperty("--ggw-vtop", "0px");
     }
+
     function lockPage() {
       if (document.body.classList.contains("ggw-page-locked")) return;
+
       lockedScrollY = window.scrollY || window.pageYOffset || 0;
+
+      if (isMobileWorkout()) {
+        /*
+         * IMPORTANTE:
+         * niente position:fixed sul body in Safari mobile.
+         * Conserviamo lo scroll e blocchiamo solo l'overflow.
+         */
+        document.documentElement.style.setProperty(
+          "--ggw-page-top",
+          Math.round(lockedScrollY) + "px"
+        );
+
+        document.documentElement.classList.add("ggw-page-locked");
+        document.body.classList.add("ggw-page-locked");
+        return;
+      }
+
+      /* Desktop */
       document.body.style.top = "-" + lockedScrollY + "px";
       document.body.classList.add("ggw-page-locked");
     }
+
     function unlockPage() {
       if (!document.body.classList.contains("ggw-page-locked")) return;
+
+      var wasMobile =
+        document.documentElement.classList.contains("ggw-page-locked");
+
+      document.documentElement.classList.remove("ggw-page-locked");
       document.body.classList.remove("ggw-page-locked");
+
+      if (wasMobile) {
+        /*
+         * Manteniamo esattamente il punto della home da cui
+         * l'utente aveva aperto la scheda.
+         */
+        requestAnimationFrame(function () {
+          window.scrollTo(0, lockedScrollY);
+        });
+        return;
+      }
+
       document.body.style.top = "";
       window.scrollTo(0, lockedScrollY);
     }
+
     function bindViewport(on) {
       var vv = window.visualViewport;
+
       if (on) {
         updateViewport();
+
         window.addEventListener("resize", updateViewport, { passive: true });
         window.addEventListener("orientationchange", updateViewport, { passive: true });
-        if (vv) {
+
+        /*
+         * VisualViewport rimane attivo SOLO desktop.
+         * Su iOS evitarlo impedisce che il drawer venga ridimensionato
+         * continuamente quando Safari apre/chiude la toolbar.
+         */
+        if (!isMobileWorkout() && vv) {
           vv.addEventListener("resize", updateViewport, { passive: true });
           vv.addEventListener("scroll", updateViewport, { passive: true });
         }
       } else {
         window.removeEventListener("resize", updateViewport);
         window.removeEventListener("orientationchange", updateViewport);
+
         if (vv) {
           vv.removeEventListener("resize", updateViewport);
           vv.removeEventListener("scroll", updateViewport);
         }
       }
     }
+
     function openPanel() {
       updateViewport();
       lockPage();

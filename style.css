@@ -1788,3 +1788,14 @@ footer p {
     min-height: 46px;
   }
 }
+
+
+/* Safari iOS edge-to-edge */
+html {
+  background: var(--background);
+  min-height: 100%;
+}
+
+body {
+  min-height: 100lvh;
+}

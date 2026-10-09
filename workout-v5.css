@@ -595,18 +595,94 @@ button.gg-add-workout.ggw-added {
 
 
 /* =========================================================
-   SAFARI V53 — FIX FASCIA SUPERIORE / OVERLAY
+   SAFARI MOBILE V60 — EDGE TO EDGE
    ========================================================= */
 
-.ggw-overlay {
-  top: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  left: 0 !important;
-}
-
 @media (max-width: 640px) {
+
+  /*
+   * Non fissiamo più il documento.
+   * Safari 26 ha problemi di compositing con body/pannelli fixed
+   * vicino alla toolbar flottante.
+   */
+  html.ggw-page-locked,
+  body.ggw-page-locked {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  body.ggw-page-locked {
+    position: static !important;
+    top: auto !important;
+    width: auto !important;
+  }
+
+  /*
+   * Layer assoluto nel documento.
+   * 100lvh usa il viewport grande e consente allo sfondo del drawer
+   * di proseguire dietro la UI traslucida di Safari.
+   */
   .ggw-panel {
-    top: 0 !important;
+    position: absolute !important;
+    top: var(--ggw-page-top, 0px) !important;
+    left: 0 !important;
+    right: auto !important;
+
+    width: 100% !important;
+    max-width: none !important;
+
+    height: 100lvh !important;
+    min-height: 100vh !important;
+    max-height: none !important;
+
+    background: var(--ggw-bg) !important;
+    box-shadow: none !important;
+
+    transform: translate3d(100%, 0, 0);
+    transition: transform .32s cubic-bezier(.22,.8,.22,1);
+  }
+
+  .ggw-panel.is-open {
+    transform: translate3d(0, 0, 0);
+  }
+
+  /*
+   * Overlay segue lo stesso spazio del drawer.
+   * Niente backdrop-filter su Safari mobile: evita un noto problema
+   * di compositing/tint della toolbar di Safari 26.
+   */
+  .ggw-overlay {
+    position: absolute !important;
+    top: var(--ggw-page-top, 0px) !important;
+    left: 0 !important;
+    right: 0 !important;
+
+    width: 100% !important;
+    height: 100lvh !important;
+
+    background: rgba(3,14,30,.62) !important;
+
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /*
+   * La SAFE AREA protegge testo e pulsanti,
+   * ma NON ferma lo sfondo.
+   */
+  .ggw-head {
+    padding-top: calc(12px + env(safe-area-inset-top)) !important;
+  }
+
+  .ggw-body {
+    padding-bottom:
+      calc(54px + env(safe-area-inset-bottom)) !important;
+
+    scroll-padding-bottom:
+      calc(54px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .ggw-toast {
+    bottom: calc(16px + env(safe-area-inset-bottom)) !important;
   }
 }
