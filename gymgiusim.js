@@ -39,6 +39,48 @@
     const rawSecondary = ex.secondaryMuscles || ex.secondary_muscles || [];
     return { id: String(ex.id ?? uid('ex')), name: String(ex.name || 'Esercizio'), originalName: String(ex.originalName || ex.name || 'Esercizio'), target: Array.isArray(rawTarget) ? rawTarget.join(', ') : String(rawTarget), equipment: String(ex.equipment || ''), image: String(ex.image || ''), gif_url: String(ex.gif_url || ''), description: String((typeof ex.description === 'object' ? (ex.description.it || ex.description.en || '') : ex.description) || ex.notes || ''), instructions: extractInstructions(ex), secondaryMuscles: Array.isArray(rawSecondary) ? rawSecondary.map(String) : [], sets: Array.isArray(ex.sets) && ex.sets.length ? ex.sets.map(s => createSet(s.reps, s.kg)) : [createSet()], custom: Boolean(ex.custom), notes: String(ex.notes || '') };
   }
+
+  function exerciseFingerprint(ex) {
+    const raw = normalize([
+      ex.originalName || ex.name || '',
+      ex.name || '',
+      ex.equipment || '',
+      ex.target || ex.muscles || '',
+      ex.image || '',
+      ex.gif_url || ''
+    ].join('|'));
+
+    let hash = 2166136261;
+    for (let i = 0; i < raw.length; i++) {
+      hash ^= raw.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(36);
+  }
+
+  function ensureUniqueExerciseIds(items, scope = 'exercise') {
+    const seen = new Set();
+
+    return (Array.isArray(items) ? items : []).map((item) => {
+      const ex = { ...item };
+      let id = String(ex.id ?? '').trim();
+
+      if (!id || seen.has(id)) {
+        const base = `${scope}-${exerciseFingerprint(ex)}`;
+        id = base;
+        let suffix = 2;
+
+        while (seen.has(id)) {
+          id = `${base}-${suffix++}`;
+        }
+      }
+
+      seen.add(id);
+      ex.id = id;
+      return ex;
+    });
+  }
+
   function normalizePlan(plan) { return { id: String(plan.id || uid('plan')), name: String(plan.name || 'Nuova scheda'), exercises: Array.isArray(plan.exercises) ? plan.exercises.map(normalizeExercise) : [], updatedAt: plan.updatedAt || Date.now() }; }
   function getActivePlan() { return state.plans.find(plan => plan.id === state.activePlanId) || null; }
   function savePlans() { saveKey(KEYS.plans, state.plans); saveKey(KEYS.active, { planId: state.activePlanId, workout: state.workout, activeSince: state.activeSince, drafts: state.drafts, editingHistoryId: state.editingHistoryId }); }
@@ -115,7 +157,19 @@
   }
   function addExercise(exercise) {
     const target = activeStorageTarget();
-    if (target.some(ex => String(ex.id) === String(exercise.id))) { showToast('Questo esercizio è già nella scheda'); return; }
+    const identity = (ex) => normalize([
+      ex.originalName || ex.name || '',
+      ex.equipment || '',
+      ex.target || ex.muscles || ''
+    ].join('|'));
+
+    if (target.some(ex =>
+      String(ex.id) === String(exercise.id) ||
+      (identity(ex) && identity(ex) === identity(exercise))
+    )) {
+      showToast('Questo esercizio è già nella scheda');
+      return;
+    }
     const previous = lastHistoryExercise(exercise.id);
     const baseSets = previous?.sets?.length ? clone(previous.sets) : [createSet()];
     target.push(normalizeExercise({ ...exercise, sets: baseSets }));
@@ -244,13 +298,13 @@
     } catch(error) { alert(`Non riesco a importare il backup. ${error.message}`); } finally { $('importBackupInput').value=''; $('backupFileInput').value=''; }
   }
   async function loadCatalog() {
-    const cached = safeRead(KEYS.catalog, []); if(Array.isArray(cached) && cached.length) state.catalog=cached.map(normalizeExercise);
+    const cached = safeRead(KEYS.catalog, []); if(Array.isArray(cached) && cached.length) state.catalog=ensureUniqueExerciseIds(cached.map(normalizeExercise), 'catalog');
     if (state.catalog.length) { ui.catalogStatus.textContent=`Catalogo pronto · ${state.catalog.length} esercizi`; renderSearchResults(); }
     try {
       const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),12000);
       const response = await fetch(DATA_URL,{signal:controller.signal,cache:'force-cache'}); clearTimeout(timer); if(!response.ok) throw new Error(`HTTP ${response.status}`);
       const data=await response.json(); if(!Array.isArray(data)) throw new Error('Formato catalogo non valido');
-      state.catalog=data.map(item=>normalizeExercise({...item,name:getCatalogName(item),originalName:item.name,aliases:[item.name,item.target,item.equipment].join(' '),instructions:Array.isArray(item.instructions)?item.instructions:(item.instructions?[item.instructions]:[])}));
+      state.catalog=ensureUniqueExerciseIds(data.map(item=>normalizeExercise({...item,name:getCatalogName(item),originalName:item.name,aliases:[item.name,item.target,item.equipment].join(' '),instructions:Array.isArray(item.instructions)?item.instructions:(item.instructions?[item.instructions]:[])})), 'catalog');
       saveKey(KEYS.catalog,state.catalog); ui.catalogStatus.textContent=`Catalogo pronto · ${state.catalog.length} esercizi`; renderSearchResults();
     } catch(error) { console.warn('Catalogo remoto non disponibile:',error); ui.catalogStatus.textContent=state.catalog.length?'Catalogo salvato disponibile; connessione non raggiungibile.':'Catalogo non disponibile: controlla la connessione. Le schede salvate continuano a funzionare.'; renderSearchResults(); }
   }
@@ -258,6 +312,50 @@
   function init() {
     state.plans=safeRead(KEYS.plans,[]).map(normalizePlan); state.history=safeRead(KEYS.history,[]); state.customExercises=safeRead('gymgiusim_custom_exercises_v1',[]).map(normalizeExercise);
     const active=safeRead(KEYS.active,{}); state.activePlanId=active.planId||state.plans[0]?.id||null; state.workout=active.workout||null; state.activeSince=active.activeSince||null; state.drafts=active.drafts||safeRead('gymgiusim_drafts_v1',{}); state.editingHistoryId=active.editingHistoryId||state.workout?.editingHistoryId||null;
+    // Riparazione conservativa degli ID duplicati già salvati.
+    state.customExercises = ensureUniqueExerciseIds(
+      state.customExercises, 'custom'
+    );
+
+    state.plans.forEach((plan, index) => {
+      plan.exercises = ensureUniqueExerciseIds(
+        plan.exercises, `plan-${index}`
+      );
+    });
+
+    state.history.forEach((record, index) => {
+      record.exercises = ensureUniqueExerciseIds(
+        record.exercises, `history-${index}`
+      );
+    });
+
+    if (state.workout && Array.isArray(state.workout.exercises)) {
+      state.workout.exercises = ensureUniqueExerciseIds(
+        state.workout.exercises, 'workout'
+      );
+    }
+
+    Object.entries(state.drafts).forEach(([key, draft]) => {
+      if (draft && Array.isArray(draft.exercises)) {
+        draft.exercises = ensureUniqueExerciseIds(
+          draft.exercises, `draft-${key}`
+        );
+      }
+    });
+
+    // Rende persistenti le riparazioni, senza cancellare lo storico.
+    saveKey(KEYS.plans, state.plans);
+    saveKey(KEYS.history, state.history);
+    saveKey(KEYS.active, {
+      planId: state.activePlanId,
+      workout: state.workout,
+      activeSince: state.activeSince,
+      drafts: state.drafts,
+      editingHistoryId: state.editingHistoryId
+    });
+    saveKey('gymgiusim_drafts_v1', state.drafts);
+    saveKey('gymgiusim_custom_exercises_v1', state.customExercises);
+
     if (!state.plans.length) { state.plans=[{id:uid('plan'),name:'La mia scheda',exercises:[],updatedAt:Date.now()}]; state.activePlanId=state.plans[0].id; saveKey(KEYS.plans,state.plans); }
     if (!state.plans.some(p=>p.id===state.activePlanId)) state.activePlanId=state.plans[0].id;
     renderPlanSelect(); renderWorkout();
