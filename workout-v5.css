@@ -686,3 +686,27 @@ button.gg-add-workout.ggw-added {
     bottom: calc(16px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* =========================================================
+   SAFARI V61 — REMOVE HOME STRIP UNDER BROWSER BAR
+   ========================================================= */
+
+@media (max-width: 640px) {
+  html.ggw-page-locked,
+  html.ggw-page-locked body {
+    background: #0b0b0b !important;
+  }
+
+  /*
+   * Il drawer deve proseguire oltre la zona visibile.
+   * Il margine extra resta dietro la toolbar di Safari.
+   */
+  .ggw-panel {
+    height: calc(100lvh + 160px) !important;
+    min-height: calc(100lvh + 160px) !important;
+  }
+
+  .ggw-overlay {
+    height: calc(100lvh + 160px) !important;
+  }
+}
