@@ -371,3 +371,70 @@ svg {
     padding-bottom: calc(32px + env(safe-area-inset-bottom)) !important;
   }
 }
+
+/* IOS WORKOUT SCROLL GUARD V2 */
+@media (max-width: 640px) {
+
+  .gwk-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: var(--gwk-viewport-height, 100dvh) !important;
+    min-height: var(--gwk-viewport-height, 100dvh) !important;
+    max-height: var(--gwk-viewport-height, 100dvh) !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+
+  .gwk-panel {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    height: var(--gwk-viewport-height, 100dvh) !important;
+    min-height: var(--gwk-viewport-height, 100dvh) !important;
+    max-height: var(--gwk-viewport-height, 100dvh) !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+
+    touch-action: none;
+  }
+
+  .gwk-header {
+    flex: 0 0 auto !important;
+    touch-action: none;
+  }
+
+  .gwk-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: none !important;
+
+    touch-action: pan-y !important;
+
+    padding-bottom: calc(
+      40px + env(safe-area-inset-bottom)
+    ) !important;
+  }
+
+  html:has(.gwk-panel.gwk-open),
+  body:has(.gwk-panel.gwk-open) {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+}

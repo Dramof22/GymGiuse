@@ -631,3 +631,83 @@
   if (document.body) init();
   else document.addEventListener("DOMContentLoaded", init);
 })();
+
+
+/* IOS_WORKOUT_SCROLL_GUARD_V2 */
+(function () {
+  let startY = 0;
+
+  function panelOpen() {
+    const panel = document.querySelector(".gwk-panel");
+    return !!(panel && panel.classList.contains("gwk-open"));
+  }
+
+  function getScroller(target) {
+    if (!(target instanceof Element)) return null;
+    return target.closest(".gwk-body");
+  }
+
+  function updateViewportHeight() {
+    const h = window.visualViewport
+      ? window.visualViewport.height
+      : window.innerHeight;
+
+    document.documentElement.style.setProperty(
+      "--gwk-viewport-height",
+      Math.round(h) + "px"
+    );
+  }
+
+  updateViewportHeight();
+
+  window.addEventListener("resize", updateViewportHeight);
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", updateViewportHeight);
+    window.visualViewport.addEventListener("scroll", updateViewportHeight);
+  }
+
+  document.addEventListener(
+    "touchstart",
+    function (e) {
+      if (!panelOpen()) return;
+      if (e.touches && e.touches.length) {
+        startY = e.touches[0].clientY;
+      }
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    "touchmove",
+    function (e) {
+      if (!panelOpen()) return;
+
+      const scroller = getScroller(e.target);
+
+      if (!scroller) {
+        e.preventDefault();
+        return;
+      }
+
+      if (!e.touches || !e.touches.length) return;
+
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - startY;
+
+      const atTop = scroller.scrollTop <= 0;
+      const atBottom =
+        Math.ceil(scroller.scrollTop + scroller.clientHeight) >=
+        scroller.scrollHeight;
+
+      if (
+        scroller.scrollHeight <= scroller.clientHeight ||
+        (atTop && deltaY > 0) ||
+        (atBottom && deltaY < 0)
+      ) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+})();
