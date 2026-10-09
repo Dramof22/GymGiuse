@@ -420,6 +420,19 @@
     function openPanel() {
       updateViewport();
       lockPage();
+
+      /*
+       * Safari usa anche theme-color per la propria chrome.
+       * Quando la Scheda è aperta deve vedere nero, non la Home.
+       */
+      var theme = document.querySelector('meta[name="theme-color"]');
+      if (theme) {
+        if (!theme.dataset.ggwOriginal) {
+          theme.dataset.ggwOriginal = theme.getAttribute("content") || "#071a33";
+        }
+        theme.setAttribute("content", "#0b0b0b");
+      }
+
       bindViewport(true);
       overlay.classList.add("is-open");
       panel.classList.add("is-open");
@@ -436,6 +449,12 @@
       panel.setAttribute("aria-hidden", "true");
       bindViewport(false);
       unlockPage();
+
+      /* ripristina il colore originale della Home */
+      var theme = document.querySelector('meta[name="theme-color"]');
+      if (theme && theme.dataset.ggwOriginal) {
+        theme.setAttribute("content", theme.dataset.ggwOriginal);
+      }
     }
 
     function refreshButtons() {

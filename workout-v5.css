@@ -769,3 +769,55 @@ button.gg-add-workout.ggw-added {
     pointer-events: none !important;
   }
 }
+
+
+/* =========================================================
+   SAFARI MOBILE V65 — BOTTOM CHROME GUARD
+   Non modifica lo scroll della V64.
+   ========================================================= */
+
+@media (max-width: 640px) {
+
+  html.ggw-page-locked {
+    background: #0b0b0b !important;
+    color-scheme: dark;
+  }
+
+  html.ggw-page-locked body {
+    background: #0b0b0b !important;
+  }
+
+  /*
+   * Fondale aggiuntivo SOTTO il viewport grande.
+   * Non è uno scroller, non contiene contenuti e non può
+   * bloccare/congelare la Scheda.
+   */
+  body.ggw-page-locked::after {
+    content: "";
+    position: absolute;
+
+    left: 0;
+    right: 0;
+
+    top: calc(var(--ggw-page-top, 0px) + 100lvh - 2px);
+
+    height: max(
+      240px,
+      calc(env(safe-area-inset-bottom) + 180px)
+    );
+
+    background: #0b0b0b;
+
+    z-index: 2147482998;
+    pointer-events: none;
+  }
+
+  /*
+   * Anche il fondale/overlay può proseguire oltre il pannello,
+   * SENZA cambiare l'altezza del pannello scrollabile.
+   */
+  .ggw-overlay {
+    height: calc(100lvh + 240px) !important;
+    min-height: calc(100lvh + 240px) !important;
+  }
+}
