@@ -652,10 +652,7 @@
       ? window.visualViewport.height
       : window.innerHeight;
 
-    document.documentElement.style.setProperty(
-      "--gwk-viewport-height",
-      Math.round(h) + "px"
-    );
+    /* viewport gestito ora dal CSS con 100lvh */
   }
 
   updateViewportHeight();

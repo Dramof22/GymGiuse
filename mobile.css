@@ -438,3 +438,53 @@ svg {
     overscroll-behavior: none !important;
   }
 }
+
+/* FIX SAFARI: la Scheda continua dietro alla barra del browser */
+@media (max-width: 640px) {
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  .gwk-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100% !important;
+
+    height: 100lvh !important;
+    min-height: 100lvh !important;
+    max-height: none !important;
+
+    background: #0b0b0b !important;
+  }
+
+  .gwk-panel {
+    position: fixed !important;
+    inset: 0 !important;
+
+    width: 100% !important;
+    max-width: 100% !important;
+
+    height: 100lvh !important;
+    min-height: 100lvh !important;
+    max-height: none !important;
+
+    background: #111 !important;
+
+    overflow: hidden !important;
+  }
+
+  .gwk-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    padding-bottom: calc(
+      80px + env(safe-area-inset-bottom)
+    ) !important;
+  }
+}
+
