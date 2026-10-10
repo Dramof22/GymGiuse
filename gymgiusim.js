@@ -196,7 +196,24 @@
     state.editingHistoryId = state.workout ? (state.workout.editingHistoryId || null) : null;
     savePlans(); renderPlanSelect(); renderWorkout();
   }
-  function renamePlan() { if (state.workout) return; const plan = getActivePlan(); if (!plan) return; const name = ui.planName.value.trim(); if (!name) { ui.planName.value = plan.name; showToast('Il nome non può essere vuoto'); return; } plan.name = name; plan.updatedAt = Date.now(); savePlans(); renderPlanSelect(); ui.planName.value = name; ui.workoutHeading.textContent = name; }
+  function renamePlan() {
+    if (state.workout) return;
+    const plan = getActivePlan();
+    if (!plan) return;
+    const name = ui.planName.value.trim();
+    if (!name) {
+      ui.planName.value = plan.name;
+      showToast('Il nome non può essere vuoto');
+      return;
+    }
+    plan.name = name;
+    plan.updatedAt = Date.now();
+    savePlans();
+    renderPlanSelect();
+    ui.planName.value = name;
+    ui.workoutHeading.textContent = name;
+    showToast('Nome della scheda salvato');
+  }
   function deleteCurrentPlan() { const plan = getActivePlan(); if (!plan) return; if (!confirm(`Eliminare definitivamente la scheda "${plan.name}"? Lo storico degli allenamenti non verrà eliminato.`)) return; state.plans = state.plans.filter(p => p.id !== plan.id); state.activePlanId = state.plans[0]?.id || null; state.workout = null; state.activeSince = null; if (!state.plans.length) createPlan('La mia scheda'); else { savePlans(); renderPlanSelect(); renderWorkout(); } showToast('Scheda eliminata'); }
   function startWorkout() { const plan = getActivePlan(); if (!plan) return; if (state.workout) { showToast('Hai già un allenamento o una seduta aperta'); return; } if (state.drafts[plan.id]) { state.workout=clone(state.drafts[plan.id]); state.activeSince=state.workout.startedAt||Date.now(); state.editingHistoryId=state.workout.editingHistoryId||null; } else { state.workout = { id:uid('workout'), planId:plan.id, name:plan.name, date:dateKey(), startedAt:Date.now(), exercises:clone(plan.exercises) }; state.activeSince = Date.now(); state.editingHistoryId=null; } saveKey(KEYS.active,{planId:state.activePlanId,workout:state.workout,activeSince:state.activeSince,drafts:state.drafts,editingHistoryId:state.editingHistoryId}); renderWorkout(); showToast('Allenamento aperto: le modifiche vengono salvate'); }
   function finishWorkout() {
@@ -361,7 +378,23 @@
     renderPlanSelect(); renderWorkout();
     ui.planSelect.addEventListener('change',()=>changePlan(ui.planSelect.value));
     $('newPlanButton').addEventListener('click',()=>{ if(state.workout && !confirm('Hai un allenamento in corso. Salvalo nello storico prima di creare una scheda nuova? Se scegli Annulla puoi continuare.')) return; createPlan('Nuova scheda'); });
-    ui.planName.addEventListener('change',renamePlan); ui.planName.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ui.planName.blur();}}); $('renameHint').addEventListener('click',()=>{if(!state.workout){ui.planName.focus();ui.planName.select();}}); $('deletePlanButton').addEventListener('click',deleteCurrentPlan);
+    ui.planName.addEventListener('change',renamePlan); ui.planName.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();ui.planName.blur();}}); $('renameHint').addEventListener('click',()=>{
+      if(state.workout){
+        showToast('Termina l’allenamento prima di rinominare la scheda');
+        return;
+      }
+      const plan=getActivePlan();
+      if(!plan) return;
+      const nuovoNome=prompt('Come vuoi chiamare questa scheda?',plan.name);
+      if(nuovoNome===null) return;
+      const nomePulito=nuovoNome.trim();
+      if(!nomePulito){
+        showToast('Inserisci un nome valido');
+        return;
+      }
+      ui.planName.value=nomePulito;
+      renamePlan();
+    }); $('deletePlanButton').addEventListener('click',deleteCurrentPlan);
     ui.search.addEventListener('input',renderSearchResults); ui.clearSearch.addEventListener('click',()=>{ui.search.value='';renderSearchResults();ui.search.focus();});
     ui.searchResults.addEventListener('click',event=>{const add=event.target.closest('[data-result-add]'); if(add){const ex=findCatalogExercise(add.dataset.resultAdd);if(ex)addExercise(ex);return;} const detail=event.target.closest('[data-result-detail]');if(detail){const ex=findCatalogExercise(detail.dataset.resultDetail);if(ex)openDetail(ex);}});
     ui.workoutList.addEventListener('click',onWorkoutClick); ui.workoutList.addEventListener('input',event=>{if(event.target.matches('.set-input'))updateSet(event.target);});

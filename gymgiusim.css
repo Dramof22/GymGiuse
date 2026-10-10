@@ -165,3 +165,265 @@ body {
   border-color: #dfc9b7 !important;
 }
 
+
+
+/* ====================================================
+   GYMGIUSE - TEMA MARMO CHIARO
+   Avorio, bianco perla e verde salvia.
+   ==================================================== */
+
+:root {
+  --bg: #f6f4ef;
+  --text: #29332f;
+  --muted: #727a74;
+  --panel: rgba(255,255,255,.92);
+  --line: #e0ded6;
+  --accent: #cfe3d7;
+}
+
+html,
+body {
+  background-color: #f6f4ef !important;
+  color: #29332f !important;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse at 12% 8%, rgba(255,255,255,.98), transparent 44%),
+    radial-gradient(ellipse at 88% 36%, rgba(211,207,196,.25), transparent 48%),
+    repeating-linear-gradient(128deg, transparent 0 145px, rgba(163,154,140,.075) 146px, rgba(255,255,255,.75) 149px, transparent 152px 290px),
+    repeating-linear-gradient(32deg, transparent 0 205px, rgba(181,174,160,.07) 206px, rgba(255,255,255,.8) 209px, transparent 212px 365px),
+    linear-gradient(135deg, #fbfaf7, #eeece5) !important;
+  background-attachment: fixed !important;
+}
+
+.app-header {
+  background: rgba(250,249,246,.94) !important;
+  color: #29332f !important;
+  border-bottom: 1px solid #e0ded6 !important;
+  box-shadow: 0 4px 18px rgba(50,45,35,.045) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.brand strong,
+.section-heading h1,
+.exercise-title-wrap h2 {
+  color: #29332f !important;
+}
+
+.brand small,
+.welcome-description,
+.exercise-title-wrap p,
+.exercise-title-wrap .equipment,
+.save-line {
+  color: #707a73 !important;
+}
+
+.brand-mark.lotus-mark {
+  background: linear-gradient(145deg, #fffefa, #e8e6dd) !important;
+  color: #648474 !important;
+  border-color: #d8d9ce !important;
+}
+
+.button-accent,
+.add-result {
+  background: #d1e5d9 !important;
+  color: #304438 !important;
+  border-color: #c4dbce !important;
+}
+
+.button-accent:active,
+.add-result:active {
+  background: #bdd9ca !important;
+}
+
+.button-outline,
+.icon-button {
+  background: rgba(255,255,255,.9) !important;
+  border-color: #dcded6 !important;
+  color: #4e6958 !important;
+}
+
+.button-finish {
+  background: #e0ebe2 !important;
+  border-color: #d0dfd3 !important;
+  color: #304438 !important;
+}
+
+/* Home: effetto marmo leggero e luminoso */
+.welcome-card {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 23px !important;
+  border: 1px solid #dedbd1 !important;
+  border-radius: 23px !important;
+  background:
+    radial-gradient(ellipse at 92% 6%, rgba(255,255,255,.98), transparent 48%),
+    repeating-linear-gradient(132deg, transparent 0 100px, rgba(185,177,163,.09) 101px, rgba(255,255,255,.88) 104px, transparent 107px 230px),
+    linear-gradient(135deg, #fffefa, #f0eee7) !important;
+  color: #29332f !important;
+  box-shadow: 0 10px 30px rgba(57,53,44,.07) !important;
+}
+
+.welcome-eyebrow,
+.eyebrow {
+  color: #6d8d7a !important;
+}
+
+.welcome-card h1 {
+  color: #29332f !important;
+  line-height: 1.14 !important;
+}
+
+.plan-select-wrap select,
+.search-box,
+.result-row,
+.exercise-card,
+.history-item {
+  background: rgba(255,255,255,.96) !important;
+  color: #29332f !important;
+  border-color: #dfe2dc !important;
+  box-shadow: 0 4px 16px rgba(50,46,37,.04) !important;
+}
+
+.plan-name-row input,
+.search-box input,
+.custom-dialog label input,
+.custom-dialog textarea,
+.set-input {
+  color: #29332f !important;
+}
+
+.plan-name-row input {
+  border-bottom-color: #bdcfc3 !important;
+}
+
+.plan-name-row input:focus,
+.set-input:focus {
+  border-color: #91b8a0 !important;
+}
+
+.plan-name-row input::placeholder,
+.search-box input::placeholder,
+.set-input::placeholder {
+  color: #929a93 !important;
+}
+
+.search-box > span,
+.detail-link,
+.text-button {
+  color: #628c73 !important;
+}
+
+.search-hint,
+.result-copy small,
+.result-copy .english-name,
+.exercise-card-bottom small,
+.privacy-note {
+  color: #778078 !important;
+}
+
+.result-thumb,
+.result-thumb-button,
+.fallback-thumb,
+.mini-media-button,
+.detail-media {
+  background: #f0efe9 !important;
+  border-color: #e0e0d8 !important;
+}
+
+.fallback-thumb,
+.no-image {
+  color: #709581 !important;
+}
+
+.count-pill,
+.set-number,
+.set-action,
+.small-icon,
+.dialog-close {
+  background: #edf1eb !important;
+  border-color: #dfe3dc !important;
+  color: #536758 !important;
+}
+
+.empty-card {
+  background: rgba(255,255,255,.7) !important;
+  border-color: #d5ddd4 !important;
+  color: #303934 !important;
+}
+
+.empty-card p {
+  color: #727b74 !important;
+}
+
+.empty-icon {
+  background: #e7efe8 !important;
+  color: #6d957d !important;
+}
+
+.sets-header,
+.instructions-block ol,
+.instructions-block p,
+.detail-description,
+.detail-meta,
+.history-item time,
+.history-summary {
+  color: #69756c !important;
+}
+
+.instructions-block {
+  border-top-color: #e1e4dc !important;
+}
+
+.set-input,
+.custom-dialog label input,
+.custom-dialog textarea {
+  background: #fbfcfa !important;
+  border-color: #dfe3dc !important;
+}
+
+.dialog {
+  background: #fbfaf7 !important;
+  border-color: #e0e1da !important;
+  color: #2c3430 !important;
+}
+
+.history-actions button {
+  background: #f1f4ef !important;
+  border-color: #dce1d9 !important;
+  color: #46594c !important;
+}
+
+.history-actions .history-delete,
+.small-icon.remove,
+.icon-button.danger-text {
+  color: #ae4b4b !important;
+}
+
+.history-empty {
+  background: rgba(255,255,255,.7) !important;
+  color: #707b72 !important;
+  border-color: #d8ded5 !important;
+}
+
+.custom-dialog > label {
+  color: #505d54 !important;
+}
+
+.toast {
+  background: #354b3e !important;
+  border-color: #536e5d !important;
+  color: #fff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-card,
+  .exercise-card,
+  .button {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
