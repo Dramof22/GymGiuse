@@ -1232,3 +1232,41 @@ body {
     backdrop-filter: none !important;
   }
 }
+
+
+/* GYMGIUSE_IOS_HEADER_NO_OVERLAP_V1 */
+@media (display-mode: standalone) and (max-width: 700px) {
+  .app-header {
+    position: relative !important;
+    top: auto !important;
+    z-index: 1 !important;
+
+    padding-top: calc(env(safe-area-inset-top, 0px) + 22px) !important;
+    padding-bottom: 15px !important;
+
+    background: #F5F0E6 !important;
+    background-color: #F5F0E6 !important;
+    background-image: none !important;
+
+    box-shadow: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    transform: none !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    isolation: auto !important;
+  }
+
+  .app-header .brand,
+  .app-header .brand strong,
+  .app-header .brand small {
+    color: #292B26 !important;
+    text-shadow: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    mix-blend-mode: normal !important;
+  }
+}
