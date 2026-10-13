@@ -1180,3 +1180,55 @@ body {
     min-height: 68px;
   }
 }
+
+
+/* GYMGIUSE_OPAQUE_STICKY_HEADER_V1 */
+/* Intestazione opaca: il contenuto non deve trasparire dietro il logo. */
+
+.app-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 999 !important;
+
+  background: #F5F0E6 !important;
+  background-color: #F5F0E6 !important;
+  background-image: none !important;
+
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+
+  box-shadow: none !important;
+  border-bottom: 1px solid #DED5C5 !important;
+  opacity: 1 !important;
+  isolation: isolate !important;
+}
+
+.app-header .brand,
+.app-header .brand *,
+.app-header .brand-mark,
+.app-header .brand-mark *,
+.app-header .header-actions {
+  opacity: 1 !important;
+  filter: none !important;
+  text-shadow: none !important;
+  mix-blend-mode: normal !important;
+}
+
+.app-header .brand strong {
+  color: #292B26 !important;
+}
+
+.app-header .brand small {
+  color: #77766D !important;
+}
+
+/* Spazio aggiuntivo nella versione aperta dalla schermata Home. */
+@media (display-mode: standalone) {
+  .app-header {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+    padding-bottom: 13px !important;
+    background: #F5F0E6 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
