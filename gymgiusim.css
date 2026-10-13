@@ -1042,3 +1042,31 @@ body {
   color: #292B26 !important;
 }
 
+
+
+/* GYMGIUSE_HEADER_TEXT_CLARITY_V1 */
+@media (max-width: 700px) {
+  .app-header {
+    background: #F5F0E6 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    position: relative;
+    z-index: 20;
+  }
+
+  .app-header .brand,
+  .app-header .brand *,
+  .app-header h1,
+  .app-header h2 {
+    text-shadow: none !important;
+    filter: none !important;
+    -webkit-text-stroke: 0 transparent !important;
+    opacity: 1 !important;
+  }
+
+  .app-header .brand {
+    color: #292B26 !important;
+    position: relative;
+    z-index: 21;
+  }
+}
