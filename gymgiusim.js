@@ -37,7 +37,7 @@
   function normalizeExercise(ex) {
     const rawTarget = ex.target || ex.muscles || ex.muscle_group || 'Muscoli non indicati';
     const rawSecondary = ex.secondaryMuscles || ex.secondary_muscles || [];
-    return { id: String(ex.id ?? uid('ex')), name: String(ex.name || 'Esercizio'), originalName: String(ex.originalName || ex.name || 'Esercizio'), target: Array.isArray(rawTarget) ? rawTarget.join(', ') : String(rawTarget), equipment: String(ex.equipment || ''), image: String(ex.image || ''), gif_url: String(ex.gif_url || ''), description: String((typeof ex.description === 'object' ? (ex.description.it || ex.description.en || '') : ex.description) || ex.notes || ''), instructions: extractInstructions(ex), secondaryMuscles: Array.isArray(rawSecondary) ? rawSecondary.map(String) : [], sets: Array.isArray(ex.sets) && ex.sets.length ? ex.sets.map(s => createSet(s.reps, s.kg)) : [createSet()], custom: Boolean(ex.custom), notes: String(ex.notes || '') };
+    return { id: String(ex.id ?? uid('ex')), name: String(ex.name || 'Esercizio'), originalName: String(ex.originalName || ex.name || 'Esercizio'), target: Array.isArray(rawTarget) ? rawTarget.join(', ') : String(rawTarget), equipment: String(ex.equipment || ''), image: String(ex.image || ''), gif_url: String(ex.gif_url || ''), description: String((typeof ex.description === 'object' ? (ex.description.it || ex.description.en || '') : ex.description) || ex.notes || ''), instructions: extractInstructions(ex), aliases: String(ex.aliases || ''), secondaryMuscles: Array.isArray(rawSecondary) ? rawSecondary.map(String) : [], sets: Array.isArray(ex.sets) && ex.sets.length ? ex.sets.map(s => createSet(s.reps, s.kg)) : [createSet()], custom: Boolean(ex.custom), notes: String(ex.notes || '') };
   }
 
   function exerciseFingerprint(ex) {
@@ -238,6 +238,752 @@
   const italianSearchAliases = [
     ['bench press','panca piana panche distensioni'],['chest press','spinte petto'],['incline','inclinata inclinato'],['decline','declinata declinato'],['flat','piana piano'],['fly','croci aperture'],['butterfly','croci pettorali'],['crossover','croci cavi'],['squat','accosciata'],['deadlift','stacco stacchi'],['romanian','rumeno rumeni'],['lunge','affondo affondi'],['leg press','pressa gambe'],['leg extension','estensioni gambe'],['leg curl','flessioni gambe'],['pull up','trazioni sbarra'],['pull-up','trazioni sbarra'],['chin up','trazioni presa inversa'],['pulldown','trazioni lat machine'],['push up','piegamenti flessioni'],['push-up','piegamenti flessioni'],['row','rematore remata'],['curl','bicipiti'],['lateral raise','alzate laterali'],['front raise','alzate frontali'],['shoulder press','spinte spalle'],['military press','lento avanti'],['overhead press','spinte spalle'],['rear delt','deltoidi posteriori'],['hip thrust','glutei spinta bacino'],['glute bridge','ponte glutei'],['calf raise','polpacci'],['shrug','scrollate'],['crunch','addominali'],['sit up','addominali'],['plank','addominali'],['dip','parallele'],['chest','petto pettorali'],['back','schiena dorso dorsali'],['shoulder','spalle deltoidi'],['biceps','bicipiti'],['glutes','glutei'],['quadriceps','quadricipiti'],['hamstrings','femorali'],['calves','polpacci'],['waist','addome addominali'],['abs','addominali'],['dumbbell','manubri manubrio'],['barbell','bilanciere'],['cable','cavi cavo'],['machine','macchina macchinario'],['body weight','corpo libero'],['band','elastico'],['seated','seduto seduta'],['standing','in piedi']
   ];
+  
+  // Genera nomi alternativi per migliorare la ricerca degli esercizi.
+  // Conserva il nome originale e non crea nuovi esercizi.
+  function buildExerciseAliases(item) {
+    const aliases = new Set();
+
+    const add = value => {
+      if (value == null) return;
+      const text = String(value).trim();
+      if (text) aliases.add(text);
+    };
+
+    const original = String(item.originalName || item.name || '')
+      .replace(/\s+v\.\s*\d+\s*$/i, '')
+      .trim();
+
+    const name = String(item.name || '').trim();
+    const equipment = String(item.equipment || '').toLowerCase().trim();
+    const target = String(item.target || '').toLowerCase().trim();
+
+    add(name);
+    add(original);
+    add(item.originalName);
+    add(item.target);
+    add(item.equipment);
+    add(item.aliases);
+
+    const lower = original.toLowerCase();
+    add(lower);
+
+    // Varianti di denominazione delle macchine.
+    const machinePrefixes = [
+      'lever ',
+      'machine ',
+      'smith machine ',
+      'cable ',
+      'dumbbell ',
+      'barbell ',
+      'kettlebell ',
+      'resistance band ',
+      'band '
+    ];
+
+    for (const prefix of machinePrefixes) {
+      if (lower.startsWith(prefix)) {
+        const movement = lower.slice(prefix.length).trim();
+        add(movement);
+
+        if (prefix === 'lever ') {
+          add(movement + ' machine');
+          add('machine ' + movement);
+          add('lever machine ' + movement);
+        }
+
+        if (prefix === 'dumbbell ') {
+          add(movement + ' dumbbell');
+          add(movement + ' with dumbbells');
+          add(movement + ' con manubri');
+        }
+
+        if (prefix === 'barbell ') {
+          add(movement + ' barbell');
+          add(movement + ' with barbell');
+          add(movement + ' con bilanciere');
+        }
+
+        if (prefix === 'cable ') {
+          add(movement + ' cable');
+          add(movement + ' ai cavi');
+          add(movement + ' al cavo');
+        }
+
+        if (prefix === 'smith machine ') {
+          add(movement + ' smith machine');
+          add(movement + ' multipower');
+          add('multipower ' + movement);
+        }
+
+        if (prefix === 'kettlebell ') {
+          add(movement + ' kettlebell');
+          add(movement + ' con kettlebell');
+        }
+
+        if (prefix === 'resistance band ' || prefix === 'band ') {
+          add(movement + ' resistance band');
+          add(movement + ' con elastico');
+          add(movement + ' con elastici');
+        }
+      }
+    }
+
+    // Sinonimi italiani e inglesi delle principali famiglie di esercizi.
+    const phrases = [
+      ['shoulder press', [
+        'shoulder press machine',
+        'machine shoulder press',
+        'pressa per le spalle',
+        'pressa spalle',
+        'spinte per le spalle',
+        'distensioni per le spalle'
+      ]],
+      ['lateral raise', [
+        'alzate laterali',
+        'alzata laterale',
+        'sollevamenti laterali'
+      ]],
+      ['front raise', [
+        'alzate frontali',
+        'alzata frontale',
+        'sollevamenti frontali'
+      ]],
+      ['rear lateral raise', [
+        'alzate posteriori',
+        'alzate posteriori delle spalle'
+      ]],
+      ['reverse fly', [
+        'aperture inverse',
+        'aperture posteriori',
+        'aperture per deltoidi posteriori'
+      ]],
+      ['upright row', [
+        'tirate al mento',
+        'tirata al mento'
+      ]],
+      ['chest press', [
+        'pressa per il petto',
+        'spinte per il petto',
+        'distensioni per il petto'
+      ]],
+      ['bench press', [
+        'panca piana',
+        'distensioni su panca',
+        'spinte su panca'
+      ]],
+      ['incline press', [
+        'panca inclinata',
+        'spinte su panca inclinata',
+        'distensioni su panca inclinata'
+      ]],
+      ['decline press', [
+        'panca declinata',
+        'spinte su panca declinata'
+      ]],
+      ['lat pulldown', [
+        'lat machine',
+        'trazioni alla lat machine',
+        'tirate alla lat machine'
+      ]],
+      ['seated row', [
+        'rematore da seduto',
+        'rematore seduto',
+        'pulley basso'
+      ]],
+      ['bent over row', [
+        'rematore piegato',
+        'rematore busto inclinato'
+      ]],
+      ['leg press', [
+        'pressa per le gambe',
+        'pressa gambe'
+      ]],
+      ['leg extension', [
+        'estensioni delle gambe',
+        'leg extension'
+      ]],
+      ['leg curl', [
+        'flessioni delle gambe',
+        'leg curl'
+      ]],
+      ['biceps curl', [
+        'curl bicipiti',
+        'curl per bicipiti',
+        'flessioni dei bicipiti'
+      ]],
+      ['triceps extension', [
+        'estensioni tricipiti',
+        'estensioni per tricipiti'
+      ]],
+      ['calf raise', [
+        'sollevamenti polpacci',
+        'calf raise'
+      ]],
+      ['deadlift', [
+        'stacco da terra',
+        'stacco'
+      ]],
+      ['squat', [
+        'squat',
+        'accosciata'
+      ]],
+      ['pull up', [
+        'trazioni alla sbarra',
+        'trazioni'
+      ]],
+      ['chin up', [
+        'trazioni presa inversa',
+        'trazioni supine'
+      ]],
+      ['push up', [
+        'piegamenti',
+        'flessioni'
+      ]],
+      ['plank', [
+        'plank',
+        'plancia'
+      ]],
+      ['crunch', [
+        'crunch addominali',
+        'piegamenti addominali'
+      ]],
+      ['hip thrust', [
+        'spinte d anca',
+        'spinta d anca',
+        'hip thrust'
+      ]],
+      ['glute bridge', [
+        'ponte per i glutei',
+        'glute bridge'
+      ]],
+      ['face pull', [
+        'tirate al viso',
+        'face pull ai cavi'
+      ]]
+    ];
+
+    for (const [phrase, variants] of phrases) {
+      if (lower.includes(phrase)) {
+        for (const variant of variants) add(variant);
+      }
+    }
+
+    // Varianti per esercizi alla macchina a leva.
+    if (
+      equipment.includes('leverage') ||
+      lower.startsWith('lever ')
+    ) {
+      const movement = lower.replace(/^lever\s+/, '').trim();
+
+      add(movement + ' machine');
+      add('machine ' + movement);
+      add('lever ' + movement);
+      add('macchina ' + movement);
+    }
+
+    // Sinonimi dei principali nomi delle attrezzature.
+    if (equipment.includes('leverage')) {
+      add('machine');
+      add('macchina');
+      add('macchina a leve');
+      add('macchinario');
+    }
+
+    if (equipment.includes('dumbbell')) {
+      add('manubri');
+      add('manubrio');
+    }
+
+    if (equipment.includes('barbell')) {
+      add('bilanciere');
+      add('bilancieri');
+    }
+
+    if (equipment.includes('cable')) {
+      add('cavo');
+      add('cavi');
+      add('ai cavi');
+    }
+
+    // Sinonimi dei gruppi muscolari.
+    const muscleAliases = {
+      delts: ['spalle', 'deltoidi', 'muscoli delle spalle'],
+      pectorals: ['petto', 'pettorali', 'muscoli pettorali'],
+      lats: ['schiena', 'gran dorsale', 'dorsali'],
+      'upper back': ['schiena alta', 'parte alta della schiena'],
+      biceps: ['bicipiti', 'muscoli bicipiti'],
+      triceps: ['tricipiti', 'muscoli tricipiti'],
+      quads: ['quadricipiti', 'cosce anteriori'],
+      hamstrings: ['femorali', 'posteriori della coscia'],
+      glutes: ['glutei', 'muscoli glutei'],
+      abs: ['addominali', 'addome'],
+      calves: ['polpacci', 'muscoli del polpaccio'],
+      forearms: ['avambracci'],
+      traps: ['trapezi', 'trapezio'],
+      traps: ['trapezi', 'trapezio'],
+      adductors: ['adduttori'],
+      abductors: ['abduttori', 'muscoli abduttori']
+    };
+
+    for (const [muscle, variants] of Object.entries(muscleAliases)) {
+      if (target.includes(muscle)) {
+        for (const variant of variants) add(variant);
+      }
+    }
+
+    return [...aliases];
+  }
+
+
+  // Genera sinonimi di ricerca dinamici per ogni esercizio del catalogo.
+  // Non crea esercizi e non modifica GIF, immagini o schede.
+  function buildExerciseSearchAliases(ex) {
+    const aliases = new Set();
+
+    const add = value => {
+      if (value == null) return;
+      if (Array.isArray(value)) {
+        value.forEach(add);
+        return;
+      }
+      const text = String(value).trim();
+      if (text) aliases.add(text);
+    };
+
+    const name = normalize(ex.name || '');
+    const original = normalize(ex.originalName || ex.name || '');
+    const equipment = normalize(ex.equipment || '');
+    const target = normalize(
+      [ex.target, ex.muscles, ex.secondaryMuscles].flat().filter(Boolean).join(' ')
+    );
+
+    add(ex.name);
+    add(ex.originalName);
+    add(ex.target);
+    add(ex.equipment);
+
+    // Attrezzature: riconosce vari modi comuni di descrivere lo stesso mezzo.
+    const equipmentVariants = [
+      {
+        terms: ['lever', 'leverage', 'machine'],
+        aliases: [
+          'machine', 'macchina', 'macchine',
+          'macchina guidata', 'macchina a leve'
+        ]
+      },
+      {
+        terms: ['dumbbell'],
+        aliases: ['manubrio', 'manubri', 'con manubri']
+      },
+      {
+        terms: ['barbell'],
+        aliases: ['bilanciere', 'bilancieri', 'con bilanciere']
+      },
+      {
+        terms: ['cable'],
+        aliases: ['cavo', 'cavi', 'ai cavi', 'al cavo']
+      },
+      {
+        terms: ['smith'],
+        aliases: ['smith machine', 'multipower', 'macchina multipower']
+      },
+      {
+        terms: ['kettlebell'],
+        aliases: ['kettlebell', 'con kettlebell']
+      },
+      {
+        terms: ['band', 'resistance band'],
+        aliases: ['elastico', 'elastici', 'banda elastica']
+      },
+      {
+        terms: ['bodyweight', 'body only'],
+        aliases: ['corpo libero', 'senza attrezzi']
+      },
+      {
+        terms: ['ez bar'],
+        aliases: ['barra ez', 'bilanciere ez']
+      },
+      {
+        terms: ['trap bar'],
+        aliases: ['barra esagonale', 'trap bar']
+      }
+    ];
+
+    for (const group of equipmentVariants) {
+      if (group.terms.some(term => original.includes(normalize(term)) ||
+                                  equipment.includes(normalize(term)))) {
+        add(group.aliases);
+      }
+    }
+
+    // Varianti di nome per le principali famiglie di movimenti.
+    // Vengono aggiunte soltanto quando il nome originale contiene il movimento.
+    const movementVariants = [
+      ['shoulder press', [
+        'shoulder press machine',
+        'machine shoulder press',
+        'pressa per le spalle',
+        'spinte per le spalle',
+        'distensioni per le spalle'
+      ]],
+      ['lateral raise', [
+        'alzate laterali', 'alzata laterale',
+        'sollevamenti laterali'
+      ]],
+      ['front raise', [
+        'alzate frontali', 'alzata frontale',
+        'sollevamenti frontali'
+      ]],
+      ['rear delt', [
+        'deltoidi posteriori', 'spalle posteriori'
+      ]],
+      ['reverse fly', [
+        'aperture inverse', 'aperture posteriori'
+      ]],
+      ['chest press', [
+        'chest press machine', 'pressa per il petto',
+        'spinte per il petto'
+      ]],
+      ['bench press', [
+        'panca piana', 'distensioni su panca',
+        'spinte su panca'
+      ]],
+      ['incline press', [
+        'panca inclinata', 'spinte su panca inclinata',
+        'distensioni su panca inclinata'
+      ]],
+      ['decline press', [
+        'panca declinata', 'spinte su panca declinata'
+      ]],
+      ['lat pulldown', [
+        'lat machine', 'tirate alla lat machine',
+        'trazioni alla lat machine'
+      ]],
+      ['seated row', [
+        'rematore seduto', 'rematore da seduto', 'pulley basso'
+      ]],
+      ['bent over row', [
+        'rematore piegato', 'rematore a busto inclinato'
+      ]],
+      ['upright row', [
+        'tirate al mento', 'tirata al mento'
+      ]],
+      ['biceps curl', [
+        'curl bicipiti', 'curl per bicipiti',
+        'flessioni dei bicipiti'
+      ]],
+      ['triceps extension', [
+        'estensioni tricipiti', 'estensioni per tricipiti'
+      ]],
+      ['leg press', [
+        'pressa per le gambe', 'pressa gambe'
+      ]],
+      ['leg extension', [
+        'leg extension', 'estensioni delle gambe'
+      ]],
+      ['leg curl', [
+        'leg curl', 'flessioni delle gambe'
+      ]],
+      ['calf raise', [
+        'sollevamenti polpacci', 'polpacci'
+      ]],
+      ['deadlift', [
+        'stacco da terra', 'stacco'
+      ]],
+      ['squat', [
+        'accosciata', 'squat'
+      ]],
+      ['lunge', [
+        'affondi', 'affondo'
+      ]],
+      ['pull up', [
+        'trazioni alla sbarra', 'trazioni'
+      ]],
+      ['chin up', [
+        'trazioni presa inversa', 'trazioni supine'
+      ]],
+      ['push up', [
+        'piegamenti', 'flessioni'
+      ]],
+      ['crunch', [
+        'crunch addominali', 'addominali'
+      ]],
+      ['plank', [
+        'plancia', 'plank addominale'
+      ]],
+      ['hip thrust', [
+        'spinte d anca', 'spinta d anca'
+      ]],
+      ['glute bridge', [
+        'ponte per i glutei', 'ponte glutei'
+      ]],
+      ['face pull', [
+        'tirate al viso', 'face pull ai cavi'
+      ]],
+      ['shrug', [
+        'scrollate', 'scrollate delle spalle'
+      ]],
+      ['wrist curl', [
+        'curl polsi', 'flessioni dei polsi'
+      ]],
+      ['hip abduction', [
+        'abduzioni dell anca', 'abduzioni anche'
+      ]],
+      ['hip adduction', [
+        'adduzioni dell anca', 'adduzioni anche'
+      ]]
+    ];
+
+    for (const [english, alternatives] of movementVariants) {
+      if (original.includes(normalize(english))) {
+        add(alternatives);
+      }
+    }
+
+    // Varianti di ordine del nome, mantenendo il movimento originale.
+    // Esempio: "lever shoulder press" -> "shoulder press machine".
+    const prefixes = [
+      ['lever ', ['machine ', '', 'macchina ']],
+      ['dumbbell ', ['', 'con manubri ', 'manubri ']],
+      ['barbell ', ['', 'con bilanciere ', 'bilanciere ']],
+      ['cable ', ['', 'ai cavi ', 'al cavo ']],
+      ['smith machine ', ['', 'multipower ']],
+      ['kettlebell ', ['', 'con kettlebell ']],
+      ['resistance band ', ['', 'con elastico ']],
+      ['band ', ['', 'con elastico ']]
+    ];
+
+    for (const [prefix, replacements] of prefixes) {
+      if (!original.startsWith(normalize(prefix))) continue;
+
+      const movement = original.slice(normalize(prefix).length).trim();
+
+      for (const replacement of replacements) {
+        add((replacement + movement).trim());
+      }
+
+      if (prefix === 'lever ') {
+        add(movement + ' machine');
+        add(movement + ' alla macchina');
+        add(movement + ' macchina');
+      }
+
+      if (prefix === 'dumbbell ') {
+        add(movement + ' con manubri');
+        add(movement + ' dumbbell');
+      }
+
+      if (prefix === 'barbell ') {
+        add(movement + ' con bilanciere');
+        add(movement + ' barbell');
+      }
+
+      if (prefix === 'cable ') {
+        add(movement + ' ai cavi');
+        add(movement + ' cable');
+      }
+    }
+
+    // Nomi dei gruppi muscolari, applicati in base ai campi del record.
+    const muscleVariants = [
+      ['delts', ['spalle', 'deltoidi']],
+      ['shoulder', ['spalle', 'deltoidi']],
+      ['pectorals', ['petto', 'pettorali']],
+      ['chest', ['petto', 'pettorali']],
+      ['lats', ['dorsali', 'schiena']],
+      ['back', ['schiena', 'dorsali']],
+      ['biceps', ['bicipiti']],
+      ['triceps', ['tricipiti']],
+      ['forearms', ['avambracci']],
+      ['quads', ['quadricipiti', 'cosce']],
+      ['hamstrings', ['femorali', 'posteriori della coscia']],
+      ['glutes', ['glutei']],
+      ['glute', ['glutei']],
+      ['abs', ['addominali', 'addome']],
+      ['abdominals', ['addominali', 'addome']],
+      ['calves', ['polpacci']],
+      ['traps', ['trapezi', 'trapezio']],
+      ['adductors', ['adduttori']],
+      ['abductors', ['abduttori']]
+    ];
+
+    for (const [english, italian] of muscleVariants) {
+      if (target.includes(normalize(english)) ||
+          original.includes(normalize(english))) {
+        add(italian);
+      }
+    }
+
+
+    // Riconosce le varianti "one arm" e "single arm".
+    // Genera sinonimi di ricerca, senza creare nuovi esercizi.
+    const unilateralAlias = [...aliases];
+
+    for (const alias of unilateralAlias) {
+      const normalizedAlias = normalize(alias);
+
+      if (/\bone arm\b/.test(normalizedAlias)) {
+        add(normalizedAlias.replace(/\bone arm\b/g, 'single arm'));
+      }
+
+      if (/\bsingle arm\b/.test(normalizedAlias)) {
+        add(normalizedAlias.replace(/\bsingle arm\b/g, 'one arm'));
+      }
+
+      if (/\bunilateral\b/.test(normalizedAlias)) {
+        add(normalizedAlias.replace(/\bunilateral\b/g, 'one arm'));
+        add(normalizedAlias.replace(/\bunilateral\b/g, 'single arm'));
+      }
+    }
+
+
+    // GYMGIUSE_EXACT_VARIANT_ALIAS_MAP
+    // Sinonimi per varianti già presenti nel catalogo.
+    // Non crea esercizi e non cambia le animazioni.
+
+    const extraExerciseAliases = {
+      'lever calf press': [
+        'machine calf press',
+        'calf press machine',
+        'pressa per i polpacci alla macchina'
+      ],
+      'lever high row': [
+        'machine high row',
+        'high row machine',
+        'rematore alto alla macchina'
+      ],
+      'lever pullover': [
+        'machine pullover',
+        'pullover machine',
+        'pullover alla macchina'
+      ],
+      'lever seated dip': [
+        'machine seated dip',
+        'seated dip machine',
+        'dip alla macchina da seduto'
+      ],
+      'lever seated fly': [
+        'machine seated fly',
+        'seated fly machine',
+        'aperture al petto alla macchina'
+      ],
+      'lever shrug': [
+        'machine shrug',
+        'shrug machine',
+        'scrollate alla macchina'
+      ],
+      'lever t bar row': [
+        'machine t bar row',
+        't bar row machine',
+        'rematore t bar alla macchina'
+      ],
+      'lever one arm shoulder press': [
+        'machine single arm shoulder press',
+        'single arm shoulder press machine',
+        'one arm shoulder press machine',
+        'spinte per le spalle alla macchina a un braccio'
+      ],
+      'lever one arm lateral high row': [
+        'machine single arm lateral high row',
+        'single arm lateral high row machine',
+        'rematore alto alla macchina a un braccio'
+      ],
+      'cable one arm lateral bent over': [
+        'single arm bent over cable lateral raise',
+        'one arm bent over cable lateral raise',
+        'alzata laterale al cavo piegato a un braccio'
+      ],
+      'roller seated shoulder flexor depresor retractor': [
+        'seated roller shoulder flexion and retraction',
+        'roller seated shoulder flexion',
+        'flessione e retrazione delle spalle da seduto con rullo'
+      ],
+      'basic toe touch male': [
+        'standing toe touch',
+        'standing toe touches',
+        'tocco delle punte dei piedi in piedi'
+      ]
+    };
+
+    const exerciseAliasBase = original.replace(/\s+v\s+\d+$/, '');
+
+    for (const [exerciseName, synonyms] of Object.entries(extraExerciseAliases)) {
+      if (exerciseAliasBase === exerciseName) {
+        add(synonyms);
+      }
+    }
+
+    return [...aliases].join(' ');
+  }
+
+
+  // GYMGIUSE_FUZZY_SEARCH_V1
+  // Ricerca tollerante agli errori di digitazione per tutto il catalogo.
+  function searchEditDistance(a, b) {
+    a = normalize(a);
+    b = normalize(b);
+
+    if (a === b) return 0;
+    if (!a || !b) return Math.max(a.length, b.length);
+
+    let previous = Array.from(
+      { length: b.length + 1 },
+      (_, i) => i
+    );
+
+    for (let i = 1; i <= a.length; i++) {
+      const current = [i];
+
+      for (let j = 1; j <= b.length; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+
+        current[j] = Math.min(
+          current[j - 1] + 1,
+          previous[j] + 1,
+          previous[j - 1] + cost
+        );
+
+        // Riconosce anche lettere adiacenti digitate al contrario.
+        if (
+          i > 1 && j > 1 &&
+          a[i - 1] === b[j - 2] &&
+          a[i - 2] === b[j - 1]
+        ) {
+          current[j] = Math.min(current[j], previous[j - 2] + 1);
+        }
+      }
+
+      previous = current;
+    }
+
+    return previous[b.length];
+  }
+
+  function searchTokenMatches(queryWord, catalogWord) {
+    if (queryWord === catalogWord) return true;
+
+    // Continua a supportare le ricerche parziali.
+    if (
+      queryWord.length >= 3 &&
+      catalogWord.startsWith(queryWord)
+    ) {
+      return true;
+    }
+
+    const longest = Math.max(queryWord.length, catalogWord.length);
+
+    // Per le parole brevi evitiamo corrispondenze troppo permissive.
+    if (longest < 4) return false;
+
+    const distance = searchEditDistance(queryWord, catalogWord);
+
+    // Una modifica per parole brevi/medie, due per parole lunghe.
+    const allowedDistance = longest >= 8 ? 2 : 1;
+
+    return distance <= allowedDistance;
+  }
+
   function matchesExercise(ex, query) {
     const textBase = [ex.name, ex.originalName, italianName(ex.originalName || ex.name), ex.target, ex.equipment, ...(ex.secondaryMuscles || [])].join(' ');
     const normalizedBase = normalize(textBase);
@@ -246,14 +992,210 @@
       const key = normalize(english);
       if ((` ${normalizedBase} `).includes(` ${key} `) || normalizedBase.split(' ').some(part => part.startsWith(key))) aliases.push(italian);
     }
-    const text = normalize(textBase + ' ' + aliases.join(' '));
-    return normalize(query).split(' ').filter(Boolean).every(word => text.includes(word));
+    const text = normalize(textBase + ' ' + aliases.join(' ') + ' ' + buildExerciseSearchAliases(ex));
+    const queryWords = normalize(query).split(' ').filter(Boolean);
+    const textWords = text.split(' ').filter(Boolean);
+
+    if (!queryWords.length) return true;
+
+    // Ogni termine cercato deve corrispondere a una parola del catalogo.
+    // Il confronto tollera lettere mancanti, errate o invertite.
+    return queryWords.every(word =>
+      textWords.some(token => searchTokenMatches(word, token))
+    );
   }
+
+  // Ordina i risultati in base alla corrispondenza con il movimento
+  // richiesto e con l'attrezzatura specificata dall'utente.
+  function scoreExerciseSearch(ex, query) {
+    const q = normalize(query);
+    const name = normalize(ex.name || '');
+    const original = normalize(ex.originalName || ex.name || '');
+    const equipment = normalize(ex.equipment || '');
+
+    const machineWords = [
+      'machine', 'macchina', 'macchine',
+      'lever', 'leverage', 'multipower'
+    ];
+    const dumbbellWords = ['dumbbell', 'dumbbells', 'manubri', 'manubrio'];
+    const barbellWords = ['barbell', 'bilanciere', 'bilancieri'];
+    const cableWords = ['cable', 'cables', 'cavo', 'cavi'];
+    const bodyweightWords = [
+      'bodyweight', 'corpo libero', 'senza attrezzi'
+    ];
+    const smithWords = ['smith', 'multipower'];
+
+    const hasAny = (text, words) =>
+      words.some(word => (' ' + text + ' ').includes(' ' + normalize(word) + ' '));
+
+    const wantsMachine = hasAny(q, machineWords);
+    const wantsDumbbell = hasAny(q, dumbbellWords);
+    const wantsBarbell = hasAny(q, barbellWords);
+    const wantsCable = hasAny(q, cableWords);
+    const wantsBodyweight = hasAny(q, bodyweightWords);
+    const wantsSmith = hasAny(q, smithWords);
+
+    // Togli dalla query le parole che specificano soltanto l'attrezzatura.
+    let movementQuery = q;
+
+    const equipmentPhrases = [
+      'bodyweight', 'corpo libero', 'senza attrezzi',
+      'dumbbells', 'dumbbell', 'manubri', 'manubrio',
+      'bilancieri', 'bilanciere', 'barbell',
+      'macchine', 'macchina', 'machine',
+      'multipower', 'leverage', 'lever',
+      'cables', 'cable', 'cavi', 'cavo'
+    ];
+
+    for (const phrase of equipmentPhrases) {
+      movementQuery = movementQuery
+        .replace(new RegExp('\\b' + phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), ' ')
+        .trim();
+    }
+
+    movementQuery = movementQuery.replace(/\s+/g, ' ').trim();
+
+    // La query deve identificare il movimento. Le sole parole
+    // dell'attrezzatura non sono sufficienti a scegliere un esercizio.
+    if (!movementQuery) return 0;
+
+    if (!matchesExercise(ex, movementQuery)) return 0;
+
+    let score = 100;
+
+    // Premia il nome dell'esercizio quando contiene la query completa.
+    if (name === q || original === q) score += 500;
+
+    if (name.includes(movementQuery)) score += 180;
+    if (original.includes(movementQuery)) score += 160;
+
+    // Premia corrispondenze più precise all'inizio del nome.
+    if (name.startsWith(movementQuery)) score += 80;
+    if (original.startsWith(movementQuery)) score += 60;
+
+    const machineEquipment =
+      /machine|leverage|lever|plate loaded|macchina/.test(equipment) ||
+      /^(lever|machine)\s/.test(original);
+
+    const dumbbellEquipment =
+      /dumbbell|manubri|manubrio/.test(equipment) ||
+      /\bdumbbell\b/.test(original);
+
+    const barbellEquipment =
+      /barbell|bilanciere/.test(equipment) ||
+      /\bbarbell\b/.test(original);
+
+    const cableEquipment =
+      /cable|cavi|cavo/.test(equipment) ||
+      /\bcable\b/.test(original);
+
+    const bodyweightEquipment =
+      /bodyweight|body only|corpo libero/.test(equipment);
+
+    const smithEquipment =
+      /smith|multipower/.test(equipment) ||
+      /smith machine|multipower/.test(original);
+
+    // L'attrezzatura richiesta pesa molto nell'ordine dei risultati.
+    if (wantsMachine) {
+      if (machineEquipment) score += 350;
+      else score -= 120;
+    }
+
+    if (wantsDumbbell) {
+      if (dumbbellEquipment) score += 350;
+      else score -= 180;
+    }
+
+    if (wantsBarbell) {
+      if (barbellEquipment) score += 350;
+      else score -= 180;
+    }
+
+    if (wantsCable) {
+      if (cableEquipment) score += 350;
+      else score -= 180;
+    }
+
+    if (wantsBodyweight) {
+      if (bodyweightEquipment) score += 350;
+      else score -= 180;
+    }
+
+    if (wantsSmith) {
+      if (smithEquipment) score += 250;
+      else score -= 100;
+    }
+
+
+    // Evita di mettere davanti le varianti a un solo braccio
+    // quando l'utente cerca genericamente un esercizio alla macchina.
+    const unilateralTerms = [
+      'one arm', 'one-arm', 'single arm', 'single-arm',
+      'unilateral', 'alternating', 'un braccio', 'a un braccio'
+    ];
+
+    const queryRequestsUnilateral = hasAny(q, unilateralTerms);
+    const exerciseIsUnilateral = hasAny(original, unilateralTerms)
+      || hasAny(name, unilateralTerms);
+
+    if (exerciseIsUnilateral && !queryRequestsUnilateral) {
+      score -= 350;
+    }
+
+    // Premia la variante generica alla macchina, quando richiesta.
+    if (
+      wantsMachine &&
+      machineEquipment &&
+      !exerciseIsUnilateral &&
+      /shoulder press/.test(movementQuery)
+    ) {
+      score += 100;
+    }
+
+    // A parità di movimento e attrezzatura, preferisce il nome originale
+    // più direttamente corrispondente alla ricerca.
+    const queryWords = movementQuery.split(' ').filter(Boolean);
+    const nameWords = original.split(' ').filter(Boolean);
+    const matchedWords = queryWords.filter(word =>
+      nameWords.some(nameWord => nameWord.includes(word))
+    ).length;
+
+    score += matchedWords * 8;
+
+    
+    // Premia il nome dell'esercizio quando la query contiene refusi.
+    const requestedWords = normalize(movementQuery).split(' ').filter(Boolean);
+    const exerciseNameWords = [...new Set(
+      (name + ' ' + original).split(' ').filter(Boolean)
+    )];
+
+    if (
+      requestedWords.length &&
+      requestedWords.every(word =>
+        exerciseNameWords.some(token => searchTokenMatches(word, token))
+      )
+    ) {
+      score += 220;
+    }
+
+    return score;
+  }
+
   function getCatalogName(ex) { return italianName(ex.name); }
   function renderSearchResults() {
     const query = ui.search.value.trim(); ui.clearSearch.hidden = !query;
     if (query.length < 2) { ui.searchResults.hidden = true; ui.searchResults.innerHTML = ''; state.visibleResults = []; ui.catalogStatus.textContent = state.catalog.length ? 'Scrivi almeno 2 lettere. Cerca in italiano o in inglese.' : 'Carico il catalogo esercizi…'; return; }
-    const results = [...state.catalog,...state.customExercises].filter(ex => matchesExercise(ex,query)).slice(0,35); state.visibleResults = results;
+    const results = [...state.catalog, ...state.customExercises]
+      .map((ex, index) => ({
+        ex,
+        index,
+        score: scoreExerciseSearch(ex, query)
+      }))
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.index - b.index)
+      .map(item => item.ex);
+    state.visibleResults = results;
     ui.searchResults.hidden = false;
     if (!results.length) { ui.searchResults.innerHTML = `<div class="history-empty">Nessun esercizio trovato. Puoi crearne uno personalizzato qui sotto.</div>`; ui.catalogStatus.textContent = state.catalog.length ? 'Nessun risultato per questa ricerca.' : 'Catalogo non ancora caricato: puoi comunque creare esercizi personali.'; return; }
     ui.searchResults.innerHTML = results.map(ex => {
@@ -261,7 +1203,7 @@
       const added = activeStorageTarget().some(item => String(item.id) === String(ex.id));
       return `<div class="result-row"><button class="mini-media-button result-thumb-button" type="button" data-result-detail="${escapeHtml(ex.id)}" aria-label="Dettagli ${escapeHtml(translated)}">${img?`<img class="result-thumb" src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<span class="result-thumb fallback-thumb">✦</span>`}</button><div class="result-copy"><strong>${escapeHtml(translated)}</strong><small>${escapeHtml(muscleLabel(ex.target || ex.muscles))} · ${escapeHtml(equipmentLabel(ex.equipment))}</small>${normalize(ex.name)!==normalize(translated)?`<small class="english-name">${escapeHtml(ex.name)}</small>`:''}</div><button class="add-result" type="button" data-result-add="${escapeHtml(ex.id)}" aria-label="Aggiungi ${escapeHtml(translated)}" ${added?'disabled':''}>${added?'✓':'+'}</button></div>`;
     }).join('');
-    ui.catalogStatus.textContent = `${results.length}${results.length===35?'+':''} risultati · premi + per aggiungere`;
+    ui.catalogStatus.textContent = `${results.length} risultati · premi + per aggiungere`;
   }
   function updateSearchDisplay() { renderSearchResults(); }
   function findCatalogExercise(id) { return [...state.catalog,...state.customExercises].find(ex => String(ex.id) === String(id)); }
@@ -314,14 +1256,26 @@
       state.plans=data.plans.map(normalizePlan); state.activePlanId=state.plans.some(p=>p.id===data.activePlanId)?data.activePlanId:state.plans[0]?.id||null; state.history=Array.isArray(data.history)?data.history:[]; state.customExercises=Array.isArray(data.customExercises)?data.customExercises.map(normalizeExercise):[]; state.workout=data.activeWorkout||null; state.activeSince=data.activeSince||null; if(!state.plans.length) createPlan('La mia scheda'); persistAll(); saveKey('gymgiusim_custom_exercises_v1',state.customExercises); renderPlanSelect();renderWorkout();renderHistory();showToast('Backup importato correttamente');
     } catch(error) { alert(`Non riesco a importare il backup. ${error.message}`); } finally { $('importBackupInput').value=''; $('backupFileInput').value=''; }
   }
+  // GYMGIUSE_TRAINAI_HIP_THRUSTS_V1
+  // GIF e istruzioni provenienti da TrainAI; mantenere l'attribuzione.
+  const GYMGIUSE_EXTRA_HIP_EXERCISES = [{"id": "gymgiuse-trainai-barbell-hip-thrust", "name": "Barbell hip thrust", "originalName": "Barbell hip thrust", "target": "glutes", "equipment": "Bilanciere e panca", "image": "https://firebasestorage.googleapis.com/v0/b/personalfinanceai-cursor.appspot.com/o/trainai%2Fexercises%2F2026-10-03-v1%2Ftrainai-barbell-hip-thrust-f1de4a98b365.png?alt=media&token=03595053-e5e5-4bfb-a879-b9749fc4d9c0", "gif_url": "https://firebasestorage.googleapis.com/v0/b/personalfinanceai-cursor.appspot.com/o/trainai%2Fexercises%2F2026-10-03-v1%2Ftrainai-barbell-hip-thrust-3b905aede1b1.gif?alt=media&token=20d9e441-309a-4c7e-b808-e0073f1c2da3", "description": "Hip Thrust con bilanciere: esercizio per allenare soprattutto i glutei, con il supporto di posteriori della coscia e adduttori.", "instructions": ["Siediti a terra con la parte alta della schiena appoggiata a una panca stabile. Posiziona il bilanciere sulle anche, utilizzando un apposito cuscinetto.", "Piega le ginocchia e appoggia entrambi i piedi a terra, all'incirca alla larghezza delle anche. Mantieni il bilanciere stabile con le mani.", "Espira e spingi attraverso i piedi per sollevare le anche. Contrai i glutei fino ad allineare spalle, anche e ginocchia.", "Mantieni l'addome attivo ed evita di inarcare eccessivamente la zona lombare. Fermati brevemente nella posizione più alta.", "Inspira e abbassa lentamente le anche, mantenendo il controllo del movimento. Ripeti senza rimbalzare nella posizione inferiore."], "aliases": "hip thrust | bilanciere hip thrust | spinta d'anca con bilanciere | hip thrust con bilanciere | glute thrust con bilanciere", "secondaryMuscles": [], "notes": "Fonte media: TrainAI. Conservare l'attribuzione richiesta."}, {"id": "gymgiuse-trainai-machine-hip-thrust", "name": "Machine hip thrust", "originalName": "Machine hip thrust", "target": "glutes", "equipment": "Macchina Hip Thrust", "image": "https://firebasestorage.googleapis.com/v0/b/personalfinanceai-cursor.appspot.com/o/trainai%2Fexercises%2F2026-10-03-v1%2Ftrainai-machine-hip-thrust-1adbb00b645c.png?alt=media&token=3d50d138-4a8e-4349-b906-e5b2a1d3c3f1", "gif_url": "https://firebasestorage.googleapis.com/v0/b/personalfinanceai-cursor.appspot.com/o/trainai%2Fexercises%2F2026-10-03-v1%2Ftrainai-machine-hip-thrust-e3427d01bb84.gif?alt=media&token=519dd121-2e0d-4442-a8d7-4b04a2ed2471", "description": "Hip Thrust alla macchina: esercizio per allenare soprattutto i glutei utilizzando una macchina specifica per l'estensione dell'anca.", "instructions": ["Regola la macchina secondo la tua altezza. Posiziona la schiena contro il supporto e il cuscinetto sulle anche, seguendo le indicazioni della macchina.", "Appoggia bene i piedi sulla pedana e mantieni le ginocchia piegate. Afferra le impugnature, se presenti, per stabilizzare il corpo.", "Espira e spingi attraverso i piedi per estendere le anche. Solleva il bacino contraendo i glutei, senza inarcare eccessivamente la schiena.", "Fermati brevemente quando spalle, anche e ginocchia sono approssimativamente allineate. Mantieni l'addome attivo.", "Inspira e ritorna lentamente alla posizione iniziale, controllando la resistenza durante tutta la discesa."], "aliases": "hip thrust machine | glute drive | hip thrust alla macchina | spinta d'anca alla macchina | glute machine hip thrust", "secondaryMuscles": [], "notes": "Fonte media: TrainAI. Conservare l'attribuzione richiesta."}];
+
   async function loadCatalog() {
-    const cached = safeRead(KEYS.catalog, []); if(Array.isArray(cached) && cached.length) state.catalog=ensureUniqueExerciseIds(cached.map(normalizeExercise), 'catalog');
+    const cached = safeRead(KEYS.catalog, []); if(Array.isArray(cached) && cached.length) state.catalog=ensureUniqueExerciseIds(cached.map(item=>normalizeExercise({...item,aliases:[...new Set([String(item.aliases||''),...buildExerciseAliases(item)])].join(' ')})), 'catalog');
     if (state.catalog.length) { ui.catalogStatus.textContent=`Catalogo pronto · ${state.catalog.length} esercizi`; renderSearchResults(); }
     try {
       const controller = new AbortController(); const timer=setTimeout(()=>controller.abort(),12000);
       const response = await fetch(DATA_URL,{signal:controller.signal,cache:'force-cache'}); clearTimeout(timer); if(!response.ok) throw new Error(`HTTP ${response.status}`);
       const data=await response.json(); if(!Array.isArray(data)) throw new Error('Formato catalogo non valido');
-      state.catalog=ensureUniqueExerciseIds(data.map(item=>normalizeExercise({...item,name:getCatalogName(item),originalName:item.name,aliases:[item.name,item.target,item.equipment].join(' '),instructions:Array.isArray(item.instructions)?item.instructions:(item.instructions?[item.instructions]:[])})), 'catalog');
+      const mergedData = [...data];
+      for (const extra of GYMGIUSE_EXTRA_HIP_EXERCISES) {
+        const alreadyPresent = mergedData.some(item =>
+          normalize(item.name || '') === normalize(extra.name || '') ||
+          normalize(item.originalName || '') === normalize(extra.originalName || '')
+        );
+        if (!alreadyPresent) mergedData.push(extra);
+      }
+      state.catalog=ensureUniqueExerciseIds(mergedData.map(item=>normalizeExercise({...item,name:getCatalogName(item),originalName:item.originalName || item.name,aliases:[String(item.aliases || ''),buildExerciseAliases(item).join(' ')].filter(Boolean).join(' '),instructions:Array.isArray(item.instructions)?item.instructions:(item.instructions?[item.instructions]:[])})), 'catalog');
       saveKey(KEYS.catalog,state.catalog); ui.catalogStatus.textContent=`Catalogo pronto · ${state.catalog.length} esercizi`; renderSearchResults();
     } catch(error) { console.warn('Catalogo remoto non disponibile:',error); ui.catalogStatus.textContent=state.catalog.length?'Catalogo salvato disponibile; connessione non raggiungibile.':'Catalogo non disponibile: controlla la connessione. Le schede salvate continuano a funzionare.'; renderSearchResults(); }
   }

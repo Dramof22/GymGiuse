@@ -427,3 +427,618 @@ body {
   }
 }
 
+
+
+/* ==========================================================
+   GYMGIUSE_IVORY_MOBILE_REDESIGN_V2
+   Restyling del foglio realmente caricato da index.html.
+   Mantiene invariati JavaScript, esercizi e animazioni.
+   ========================================================== */
+
+:root {
+  --gg-ivory: #F5F0E6;
+  --gg-paper: #FFFCF6;
+  --gg-ink: #292B26;
+  --gg-olive: #465641;
+  --gg-olive-deep: #344330;
+  --gg-terracotta: #C97852;
+  --gg-sand: #DED5C5;
+  --gg-muted: #77766D;
+  --gg-shadow: 0 8px 26px rgba(49, 45, 34, .065);
+  --gg-radius: 19px;
+}
+
+/* Sfondo e tipografia */
+html {
+  background: var(--gg-ivory);
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--gg-ivory) !important;
+  color: var(--gg-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Intestazione */
+.app-header {
+  background: rgba(245, 240, 230, .96);
+  border-bottom: 1px solid var(--gg-sand);
+  box-shadow: 0 3px 15px rgba(49, 45, 34, .035);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.brand {
+  color: var(--gg-ink);
+}
+
+.header-actions {
+  gap: 8px;
+}
+
+/* Contenuto principale */
+.app-main {
+  width: min(100% - 32px, 1080px);
+  margin-inline: auto;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #FFFCF6 0%, #E9E8D9 100%);
+  color: var(--gg-ink);
+  border: 1px solid rgba(70, 86, 65, .12);
+  border-radius: 25px;
+  box-shadow: var(--gg-shadow);
+  padding: clamp(22px, 5vw, 38px);
+  overflow: hidden;
+}
+
+.welcome-card h1,
+.welcome-title {
+  color: var(--gg-ink);
+  letter-spacing: -.035em;
+  line-height: 1.13;
+}
+
+.welcome-eyebrow,
+.eyebrow,
+.search-section > label {
+  color: var(--gg-olive);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .105em;
+}
+
+.welcome-description {
+  color: #66675D;
+  line-height: 1.65;
+}
+
+/* Selezione e nome della scheda */
+.plan-toolbar,
+.plan-name-row {
+  gap: 10px;
+}
+
+.plan-select-wrap select,
+#planSelect,
+#planName {
+  background: var(--gg-paper);
+  color: var(--gg-ink);
+  border: 1px solid var(--gg-sand);
+  border-radius: 13px;
+  min-height: 47px;
+  box-sizing: border-box;
+}
+
+.save-line {
+  color: var(--gg-muted);
+  font-size: 12px;
+}
+
+/* Ricerca esercizi */
+.search-section {
+  background: var(--gg-paper);
+  border: 1px solid var(--gg-sand);
+  border-radius: var(--gg-radius);
+  padding: clamp(16px, 4vw, 24px);
+  box-shadow: var(--gg-shadow);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FFFFFF;
+  border: 1.5px solid #D5CCBA;
+  border-radius: 15px;
+  padding: 0 13px;
+  min-height: 53px;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--gg-olive);
+  box-shadow: 0 0 0 4px rgba(70, 86, 65, .10);
+}
+
+.search-box input,
+#exerciseSearch {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  background: transparent;
+  color: var(--gg-ink);
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  font-size: 16px;
+  padding: 12px 0;
+}
+
+.search-box input:focus,
+#exerciseSearch:focus {
+  outline: 0;
+  box-shadow: none;
+}
+
+.search-box input::placeholder,
+#exerciseSearch::placeholder {
+  color: #969187;
+}
+
+.search-hint,
+#catalogStatus {
+  color: var(--gg-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Risultati della ricerca */
+.search-results {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.search-results > * {
+  background: #FFFFFF;
+  border: 1px solid var(--gg-sand);
+  border-radius: 15px;
+  box-shadow: 0 3px 12px rgba(49, 45, 34, .035);
+  min-width: 0;
+}
+
+/* Sezione allenamento */
+.workout-section {
+  margin-top: 30px;
+}
+
+.section-heading {
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-heading h1,
+.section-heading h2 {
+  letter-spacing: -.03em;
+  color: var(--gg-ink);
+}
+
+.count-pill {
+  background: #E4E7DA;
+  color: var(--gg-olive-deep);
+  border: 1px solid #D1D9C8;
+  border-radius: 100px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.empty-card {
+  background: rgba(255, 252, 246, .75);
+  border: 1px dashed #CDC4B3;
+  border-radius: var(--gg-radius);
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.empty-icon {
+  background: #E4E7DA;
+  color: var(--gg-olive);
+  border-radius: 15px;
+}
+
+/* Schede allenamento: restyling senza alterare le animazioni */
+.workout-list {
+  display: grid;
+  gap: 13px;
+}
+
+.workout-list > * {
+  border-radius: 17px;
+  border-color: var(--gg-sand);
+  box-shadow: 0 4px 17px rgba(49, 45, 34, .05);
+}
+
+/* Pulsanti */
+.button {
+  min-height: 45px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: background-color .18s ease,
+              border-color .18s ease,
+              transform .12s ease,
+              box-shadow .18s ease;
+}
+
+.button:active,
+.icon-button:active {
+  transform: scale(.98);
+}
+
+.button-accent,
+.button-finish {
+  background: var(--gg-olive);
+  color: #FFFCF6;
+  border-color: var(--gg-olive);
+  box-shadow: 0 4px 10px rgba(52, 67, 48, .12);
+}
+
+.button-accent:hover,
+.button-finish:hover {
+  background: var(--gg-olive-deep);
+  border-color: var(--gg-olive-deep);
+}
+
+.button-outline {
+  background: var(--gg-paper);
+  color: var(--gg-olive-deep);
+  border: 1px solid #C8D0BD;
+}
+
+.button-quiet {
+  background: transparent;
+  color: var(--gg-olive-deep);
+  border: 1px solid transparent;
+}
+
+.button-quiet:hover,
+.button-outline:hover {
+  background: #EAEBDD;
+}
+
+.icon-button {
+  border-radius: 11px;
+}
+
+.danger-text {
+  color: #A7473D;
+}
+
+.clear-search {
+  color: var(--gg-muted);
+}
+
+/* Barra inferiore, esportazione e privacy */
+.workout-footer {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.utility-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.text-button {
+  color: var(--gg-olive-deep);
+  font-weight: 650;
+}
+
+.privacy-note {
+  color: var(--gg-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-top: 20px;
+}
+
+/* Finestre e dettagli degli esercizi */
+.dialog-backdrop {
+  background: rgba(35, 38, 31, .58);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.dialog {
+  background: var(--gg-paper);
+  color: var(--gg-ink);
+  border: 1px solid rgba(222, 213, 197, .9);
+  border-radius: 23px;
+  box-shadow: 0 22px 65px rgba(29, 31, 25, .22);
+}
+
+.dialog-content {
+  color: var(--gg-ink);
+}
+
+.dialog h2,
+.dialog h3 {
+  color: var(--gg-ink);
+}
+
+.dialog-close {
+  background: rgba(245, 240, 230, .95);
+  color: var(--gg-ink);
+  border: 1px solid var(--gg-sand);
+  border-radius: 50%;
+}
+
+.detail-meta,
+.detail-description,
+.instructions-block,
+.instructions-block li {
+  color: #5F6057;
+  line-height: 1.7;
+}
+
+.detail-media {
+  background: #F0EBDD;
+  overflow: hidden;
+}
+
+/* Non alteriamo proporzioni o contenuti delle GIF originali. */
+.detail-media img,
+.detail-media video,
+.exercise-animation,
+.exercise-gif {
+  object-fit: contain;
+  max-width: 100%;
+}
+
+/* Campi, tastiera mobile e accessibilità */
+input,
+select,
+textarea {
+  accent-color: var(--gg-olive);
+}
+
+:focus-visible {
+  outline-color: rgba(70, 86, 65, .5);
+  outline-offset: 3px;
+}
+
+/* Layout mobile */
+@media (max-width: 650px) {
+  .app-header {
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+
+  .app-main {
+    width: auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 13px 14px max(25px, env(safe-area-inset-bottom));
+  }
+
+  .welcome-card {
+    border-radius: 22px;
+    padding: 23px 20px;
+    margin-bottom: 18px;
+  }
+
+  .welcome-card h1 {
+    font-size: clamp(25px, 7vw, 32px);
+    max-width: 18ch;
+  }
+
+  .plan-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .plan-select-wrap {
+    min-width: 0;
+  }
+
+  #planSelect {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .plan-name-row {
+    display: flex;
+    align-items: center;
+  }
+
+  #planName {
+    flex: 1;
+    width: 0;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .search-section {
+    padding: 16px;
+    margin-top: 18px;
+  }
+
+  .search-box {
+    min-height: 51px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+  }
+
+  .section-heading h1 {
+    font-size: 25px;
+  }
+
+  .workout-list {
+    gap: 12px;
+  }
+
+  .button {
+    min-height: 47px;
+  }
+
+  .full-button {
+    width: 100%;
+  }
+
+  .utility-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .text-button {
+    min-height: 43px;
+    text-align: left;
+  }
+
+  .dialog {
+    width: calc(100vw - 24px);
+    max-width: 520px;
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top));
+    overflow-y: auto;
+    border-radius: 21px;
+  }
+
+  .detail-media {
+    border-radius: 16px;
+  }
+}
+
+/* Telefoni molto piccoli */
+@media (max-width: 380px) {
+  .app-main {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+
+  .welcome-card {
+    padding: 19px 16px;
+  }
+
+  .search-section {
+    padding: 13px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .button-quiet {
+    padding-inline: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Fine restyling GymGiuse */
+
+
+
+/* GYMGIUSE_TRUE_IVORY_PALETTE_V3
+   Corregge le variabili originali usate dai componenti dell'app. */
+
+:root {
+  --background: #F5F0E6 !important;
+  --navy: #465641 !important;
+  --blue: #465641 !important;
+  --blue-soft: #E4E7DA !important;
+  --red: #A7473D !important;
+  --red-soft: #F7E7E2 !important;
+
+  --gg-ivory: #F5F0E6;
+  --gg-card: #FFFCF5;
+  --gg-ink: #292B26;
+  --gg-olive: #465641;
+  --gg-olive-dark: #344330;
+  --gg-terracotta: #C97852;
+  --gg-sand: #DED5C5;
+  --gg-muted: #77766D;
+}
+
+html,
+body {
+  background: #F5F0E6 !important;
+  color: #292B26;
+}
+
+.app-header {
+  background: #F5F0E6 !important;
+  border-bottom: 1px solid #DED5C5 !important;
+}
+
+.welcome-card {
+  background: linear-gradient(135deg, #FFFCF5, #E4E7DA) !important;
+  color: #292B26 !important;
+  border: 1px solid #D5DCCB !important;
+  box-shadow: 0 8px 26px rgba(49, 45, 34, .07) !important;
+}
+
+.button-accent,
+.button-finish {
+  background: #465641 !important;
+  color: #FFFCF5 !important;
+  border-color: #465641 !important;
+}
+
+.button-outline {
+  background: #FFFCF5 !important;
+  color: #465641 !important;
+  border-color: #C8D0BD !important;
+}
+
+.count-pill,
+.empty-icon {
+  background: #E4E7DA !important;
+  color: #344330 !important;
+}
+
+.search-section {
+  background: #FFFCF5 !important;
+  border-color: #DED5C5 !important;
+}
+
+.search-box {
+  background: #FFFFFF !important;
+  border-color: #C8D0BD !important;
+}
+
+.workout-list > *,
+.search-results > * {
+  border-color: #DED5C5 !important;
+}
+
+.dialog {
+  background: #FFFCF5 !important;
+  color: #292B26 !important;
+}
+
