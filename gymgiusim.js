@@ -108,6 +108,26 @@
     ui.planSelect.value = state.activePlanId || state.plans[0].id;
   }
   function renderWorkout() {
+    const historyMode = Boolean(state.editingHistoryId);
+    const previouslyInHistory = document.body.classList.contains('history-review');
+    const expandedHistoryIds = historyMode && previouslyInHistory
+      ? new Set(
+          [...ui.workoutList.querySelectorAll('.exercise-card:not(.history-collapsed)')]
+            .map(card => String(card.dataset.exerciseId))
+        )
+      : new Set();
+
+    document.body.classList.toggle('history-review', historyMode);
+
+    // Usa il colore effettivo del pulsante originale "Termina allenamento".
+    const finishButton = document.getElementById('finishWorkoutButton');
+    if (finishButton) {
+      document.documentElement.style.setProperty(
+        '--gymgiuse-finish-bg',
+        getComputedStyle(finishButton).backgroundColor
+      );
+    }
+
     const p = getActivePlan(); const exercises = currentExercises();
     ui.planName.value = state.workout ? state.workout.name : (p ? p.name : '');
     ui.planName.readOnly = Boolean(state.workout);
@@ -118,7 +138,20 @@
       const thumbnail = ex.image ? mediaUrl(ex.image) : '';
       const target = muscleLabel(ex.target || ex.muscles || '');
       const equipment = equipmentLabel(ex.equipment);
-      return `<article class="exercise-card" data-exercise-id="${escapeHtml(ex.id)}">
+      const historyExpanded = historyMode && expandedHistoryIds.has(String(ex.id));
+      const cardState = historyMode && !historyExpanded ? ' history-collapsed' : '';
+      const expandedText = historyExpanded ? 'true' : 'false';
+      const arrow = historyExpanded ? '⌃' : '⌄';
+
+      return `<article class="exercise-card${cardState}" data-exercise-id="${escapeHtml(ex.id)}">
+        <button class="exercise-accordion-toggle" type="button"
+          data-action="toggle-exercise"
+          data-id="${escapeHtml(ex.id)}"
+          aria-expanded="${expandedText}">
+          <span class="exercise-accordion-number">${index + 1}</span>
+          <span class="exercise-accordion-name">${escapeHtml(ex.name)}</span>
+          <span class="exercise-accordion-arrow" aria-hidden="true">${arrow}</span>
+        </button>
         <div class="exercise-card-top">
           <button class="mini-media-button" type="button" data-action="details" data-id="${escapeHtml(ex.id)}" aria-label="Vedi animazione e istruzioni di ${escapeHtml(ex.name)}">${thumbnail ? `<img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<span class="no-image">${ex.custom ? '✎' : '＋'}</span>`}<span class="play-overlay">▶</span></button>
           <div class="exercise-title-wrap"><h2>${escapeHtml(ex.name)}</h2><p>${escapeHtml(target)}</p><p class="equipment">${escapeHtml(equipment)}</p></div>
@@ -177,8 +210,28 @@
     ui.search.value = ''; updateSearchDisplay(); ui.search.blur(); showToast('Esercizio aggiunto alla scheda');
   }
   function onWorkoutClick(event) {
-    const btn = event.target.closest('button[data-action]'); if (!btn) return;
-    const { action, id } = btn.dataset; const exercises = activeStorageTarget(); const index = exercises.findIndex(ex => String(ex.id) === String(id)); if (index < 0) return;
+    const btn = event.target.closest('button[data-action]');
+    if (!btn) return;
+
+    const { action, id } = btn.dataset;
+
+    // Apertura e chiusura della nuvoletta nello Storico.
+    // Non ricostruisce l'esercizio e non altera i dati salvati.
+    if (action === 'toggle-exercise') {
+      const card = btn.closest('.exercise-card');
+      if (!card) return;
+
+      const collapsed = card.classList.toggle('history-collapsed');
+      btn.setAttribute('aria-expanded', String(!collapsed));
+
+      const arrow = btn.querySelector('.exercise-accordion-arrow');
+      if (arrow) arrow.textContent = collapsed ? '⌄' : '⌃';
+      return;
+    }
+
+    const exercises = activeStorageTarget();
+    const index = exercises.findIndex(ex => String(ex.id) === String(id));
+    if (index < 0) return;
     if (action === 'details') { openDetail(exercises[index]); return; }
     if (action === 'remove') { if (confirm(`Rimuovere "${exercises[index].name}" dalla scheda?`)) { exercises.splice(index,1); persistEditorChange(); renderWorkout(); } return; }
     if (action === 'up' && index > 0) [exercises[index-1],exercises[index]] = [exercises[index],exercises[index-1]];

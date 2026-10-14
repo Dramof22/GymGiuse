@@ -1270,3 +1270,106 @@ body {
     mix-blend-mode: normal !important;
   }
 }
+
+
+
+/* GYMGIUSE - STORICO A NUVOLETTE */
+body.history-review .welcome-card,
+body.history-review .plan-toolbar,
+body.history-review .plan-name-row,
+body.history-review .save-line,
+body.history-review .workout-section > .section-heading,
+body.history-review .utility-row,
+body.history-review .privacy-note {
+  display: none !important;
+}
+
+/* La ricerca originale resta in cima alla schermata. */
+body.history-review .search-section {
+  display: block;
+  margin-bottom: 14px;
+}
+
+/* Lista compatta: utilizza gli esercizi originali, non duplicati. */
+body.history-review .workout-list {
+  display: grid;
+  gap: 8px;
+}
+
+body.history-review .exercise-card {
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+/* Il pulsante accordion è presente soltanto nello Storico. */
+.exercise-accordion-toggle {
+  display: none;
+}
+
+body.history-review .exercise-accordion-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 48px;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 13px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--gymgiuse-finish-bg, #747b4c);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.history-review .exercise-accordion-number {
+  display: flex;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.35);
+  border-radius: 8px;
+  background: rgba(255,255,255,.13);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+body.history-review .exercise-accordion-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+body.history-review .exercise-accordion-arrow {
+  flex: 0 0 auto;
+  font-size: 19px;
+  line-height: 1;
+}
+
+/* Quando chiuso rimane visibile soltanto la nuvoletta. */
+body.history-review .exercise-card.history-collapsed .exercise-card-top,
+body.history-review .exercise-card.history-collapsed .sets-table,
+body.history-review .exercise-card.history-collapsed .exercise-card-bottom {
+  display: none !important;
+}
+
+/* Quando aperto, tornano visibili tutti i componenti originali. */
+body.history-review .exercise-card:not(.history-collapsed)
+  .exercise-accordion-toggle {
+  border-radius: 13px 13px 0 0;
+}
+
+/* Mantieni i comandi originali per aggiungere esercizi. */
+body.history-review .workout-footer {
+  display: grid;
+}
+
+body.history-review #addCustomExerciseButton {
+  display: block;
+}
