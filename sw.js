@@ -1,5 +1,5 @@
-const CACHE_NAME = 'gymgiusim-shell-v3';
-const APP_FILES = ['./', './index.html', './gymgiusim.css', './gymgiusim.js', './manifest.webmanifest', './icon.svg'];
+const CACHE_NAME = 'gymgiusim-shell-v4';
+const APP_FILES = ['./', './index.html', './gymgiusim.css', './gymgiusim.js', './manifest.webmanifest', './icon.svg', './gymgiuse-lotus-home-20261013.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
 });
