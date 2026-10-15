@@ -37,7 +37,7 @@
   function normalizeExercise(ex) {
     const rawTarget = ex.target || ex.muscles || ex.muscle_group || 'Muscoli non indicati';
     const rawSecondary = ex.secondaryMuscles || ex.secondary_muscles || [];
-    return { id: String(ex.id ?? uid('ex')), name: String(ex.name || 'Esercizio'), originalName: String(ex.originalName || ex.name || 'Esercizio'), target: Array.isArray(rawTarget) ? rawTarget.join(', ') : String(rawTarget), equipment: String(ex.equipment || ''), image: String(ex.image || ''), gif_url: String(ex.gif_url || ''), description: String((typeof ex.description === 'object' ? (ex.description.it || ex.description.en || '') : ex.description) || ex.notes || ''), instructions: extractInstructions(ex), aliases: String(ex.aliases || ''), secondaryMuscles: Array.isArray(rawSecondary) ? rawSecondary.map(String) : [], sets: Array.isArray(ex.sets) && ex.sets.length ? ex.sets.map(s => createSet(s.reps, s.kg)) : [createSet()], custom: Boolean(ex.custom), notes: String(ex.notes || '') };
+    return { id: String(ex.id ?? uid('ex')), name: String(ex.name || 'Esercizio'), originalName: String(ex.originalName || ex.name || 'Esercizio'), target: Array.isArray(rawTarget) ? rawTarget.join(', ') : String(rawTarget), equipment: String(ex.equipment || ''), image: String(ex.image || ''), gif_url: String(ex.gif_url || ''), video_url: String(ex.video_url || ''), description: String((typeof ex.description === 'object' ? (ex.description.it || ex.description.en || '') : ex.description) || ex.notes || ''), instructions: extractInstructions(ex), aliases: String(ex.aliases || ''), secondaryMuscles: Array.isArray(rawSecondary) ? rawSecondary.map(String) : [], sets: Array.isArray(ex.sets) && ex.sets.length ? ex.sets.map(s => createSet(s.reps, s.kg)) : [createSet()], custom: Boolean(ex.custom), notes: String(ex.notes || '') };
   }
 
   function exerciseFingerprint(ex) {
@@ -1060,7 +1060,47 @@
 
   // Ordina i risultati in base alla corrispondenza con il movimento
   // richiesto e con l'attrezzatura specificata dall'utente.
+
+  // GYMGIUSIM_FAST_SEARCH_V4
   function scoreExerciseSearch(ex, query) {
+
+    const clean = value => normalize(String(value || '')).trim();
+
+    let q = clean(query);
+
+    if (!q) return 0;
+
+    q = q.replace(/\bpeck\b/g, 'pec');
+
+    const names = [
+      clean(ex.name),
+      clean(ex.originalName || ex.name),
+      clean(typeof italianName === 'function'
+        ? italianName(ex.name || '')
+        : '')
+    ].filter(Boolean);
+
+    const words = names.flatMap(name => name.split(/\s+/));
+
+    // Una sola lettera: cerca dall'inizio del nome.
+    if (q.length === 1) {
+      return names.some(name => name.startsWith(q)) ? 3000 : 0;
+    }
+
+    // Corrispondenza dall'inizio del nome.
+    if (names.some(name => name.startsWith(q))) return 3000;
+
+    // Corrispondenza dall'inizio di una parola.
+    if (words.some(word => word.startsWith(q))) return 2500;
+
+    // Corrispondenza parziale.
+    if (names.some(name => name.includes(q))) return 2000;
+
+    // Mantiene sinonimi, muscoli e attrezzature.
+    return originalScoreExerciseSearch(ex, q);
+  }
+
+  function originalScoreExerciseSearch(ex, query) {
     const q = normalize(query);
     const name = normalize(ex.name || '');
     const original = normalize(ex.originalName || ex.name || '');
@@ -1238,7 +1278,7 @@
   function getCatalogName(ex) { return italianName(ex.name); }
   function renderSearchResults() {
     const query = ui.search.value.trim(); ui.clearSearch.hidden = !query;
-    if (query.length < 2) { ui.searchResults.hidden = true; ui.searchResults.innerHTML = ''; state.visibleResults = []; ui.catalogStatus.textContent = state.catalog.length ? 'Scrivi almeno 2 lettere. Cerca in italiano o in inglese.' : 'Carico il catalogo esercizi…'; return; }
+    if (query.length < 1) { ui.searchResults.hidden = true; ui.searchResults.innerHTML = ''; state.visibleResults = []; ui.catalogStatus.textContent = state.catalog.length ? 'Scrivi almeno 2 lettere. Cerca in italiano o in inglese.' : 'Carico il catalogo esercizi…'; return; }
     const results = [...state.catalog, ...state.customExercises]
       .map((ex, index) => ({
         ex,
@@ -1253,13 +1293,29 @@
     if (!results.length) { ui.searchResults.innerHTML = `<div class="history-empty">Nessun esercizio trovato. Puoi crearne uno personalizzato qui sotto.</div>`; ui.catalogStatus.textContent = state.catalog.length ? 'Nessun risultato per questa ricerca.' : 'Catalogo non ancora caricato: puoi comunque creare esercizi personali.'; return; }
     ui.searchResults.innerHTML = results.map(ex => {
       const translated = getCatalogName(ex); const img = ex.image ? mediaUrl(ex.image) : '';
+      const vitalVideo = ex.video_url || VITAL_VIDEO_BY_ID[String(ex.id)] || '';
       const added = activeStorageTarget().some(item => String(item.id) === String(ex.id));
-      return `<div class="result-row"><button class="mini-media-button result-thumb-button" type="button" data-result-detail="${escapeHtml(ex.id)}" aria-label="Dettagli ${escapeHtml(translated)}">${img?`<img class="result-thumb" src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'">`:`<span class="result-thumb fallback-thumb">✦</span>`}</button><div class="result-copy"><strong>${escapeHtml(translated)}</strong><small>${escapeHtml(muscleLabel(ex.target || ex.muscles))} · ${escapeHtml(equipmentLabel(ex.equipment))}</small>${normalize(ex.name)!==normalize(translated)?`<small class="english-name">${escapeHtml(ex.name)}</small>`:''}</div><button class="add-result" type="button" data-result-add="${escapeHtml(ex.id)}" aria-label="Aggiungi ${escapeHtml(translated)}" ${added?'disabled':''}>${added?'✓':'+'}</button></div>`;
+      return `<div class="result-row"><button class="mini-media-button result-thumb-button" type="button" data-result-detail="${escapeHtml(ex.id)}" aria-label="Dettagli ${escapeHtml(translated)}">${vitalVideo
+      ? `<video class="result-thumb" src="${escapeHtml(vitalVideo)}" autoplay muted loop playsinline preload="metadata" aria-label="Animazione ${escapeHtml(translated)}"></video>`
+      : img
+      ? `<img class="result-thumb" src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+      : `<span class="result-thumb fallback-thumb">✦</span>`}</button><div class="result-copy"><strong>${escapeHtml(translated)}</strong><small>${escapeHtml(muscleLabel(ex.target || ex.muscles))} · ${escapeHtml(equipmentLabel(ex.equipment))}</small>${normalize(ex.name)!==normalize(translated)?`<small class="english-name">${escapeHtml(ex.name)}</small>`:''}</div><button class="add-result" type="button" data-result-add="${escapeHtml(ex.id)}" aria-label="Aggiungi ${escapeHtml(translated)}" ${added?'disabled':''}>${added?'✓':'+'}</button></div>`;
     }).join('');
     ui.catalogStatus.textContent = `${results.length} risultati · premi + per aggiungere`;
   }
   function updateSearchDisplay() { renderSearchResults(); }
   function findCatalogExercise(id) { return [...state.catalog,...state.customExercises].find(ex => String(ex.id) === String(id)); }
+
+  // GYMGIUSIM_VITAL_OVERRIDES_V1
+  const VITAL_VIDEO_BY_ID = {
+  "0042": "./vital-animations/videos/0056.mp4",
+  "0085": "./vital-animations/videos/0060.mp4",
+  "1760": "./vital-animations/videos/0064.mp4",
+  "0549": "./vital-animations/videos/0072.mp4",
+  "0120": "./vital-animations/videos/0089.mp4",
+  "0437": "./vital-animations/videos/0091.mp4"
+};
+
   function openDetail(ex) {
     state.detailExercise = ex;
     $('detailTitle').textContent = ex.name;
@@ -1269,7 +1325,15 @@
     $('detailMuscles').textContent = [muscleLabel(ex.target || ex.muscles), ...(ex.secondaryMuscles || []).map(muscleLabel)].filter(Boolean).join(' · ');
     const media = $('detailMedia');
     const gif = ex.gif_url ? mediaUrl(ex.gif_url) : (ex.image ? mediaUrl(ex.image) : '');
-    media.innerHTML = gif ? `<img src="${escapeHtml(gif)}" alt="Animazione di ${escapeHtml(ex.name)}" loading="eager" onerror="this.onerror=null;this.src='${escapeHtml(ex.image?mediaUrl(ex.image):'')}';if(!this.src)this.style.display='none'">` : `<div class="history-empty">Animazione non disponibile per questo esercizio.</div>`;
+    const video =
+      ex.video_url ||
+      VITAL_VIDEO_BY_ID[String(ex.id)] ||
+      '';
+    media.innerHTML = video
+      ? `<video src="${escapeHtml(video)}" autoplay muted loop playsinline preload="metadata" controls style="width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:12px;"></video>`
+      : gif
+      ? `<img src="${escapeHtml(gif)}" alt="Animazione di ${escapeHtml(ex.name)}" loading="eager" onerror="this.onerror=null;this.src='${escapeHtml(ex.image?mediaUrl(ex.image):'')}';if(!this.src)this.style.display='none'">`
+      : `<div class="history-empty">Animazione non disponibile per questo esercizio.</div>`;
     const instructions = $('detailInstructions'); instructions.innerHTML = '';
     const instructionList = Array.isArray(ex.instructions) ? ex.instructions : (ex.instructions ? [ex.instructions] : []);
     const fallback = instructionList.length ? instructionList : ['Posiziona il corpo e l’attrezzatura in modo stabile.', 'Esegui il movimento in modo controllato, senza slanci.', 'Mantieni la respirazione regolare e interrompi se senti dolore.'];
@@ -1321,6 +1385,49 @@
       const response = await fetch(DATA_URL,{signal:controller.signal,cache:'force-cache'}); clearTimeout(timer); if(!response.ok) throw new Error(`HTTP ${response.status}`);
       const data=await response.json(); if(!Array.isArray(data)) throw new Error('Formato catalogo non valido');
       const mergedData = [...data];
+
+// GYMGIUSIM_VITAL_CATALOG_V1
+try {
+  const vitalResponse = await fetch(
+    './vital-animations/exercises.json',
+    { cache: 'no-cache' }
+  );
+
+  if (!vitalResponse.ok) {
+    throw new Error('Catalogo Vital non disponibile');
+  }
+
+  const vitalExercises = await vitalResponse.json();
+
+  if (!Array.isArray(vitalExercises)) {
+    throw new Error('Formato Vital non valido');
+  }
+
+  for (const vital of vitalExercises) {
+    if (!mergedData.some(item =>
+      String(item.id) === String(vital.id)
+    )) {
+      mergedData.push({
+        ...vital,
+        originalName: vital.name,
+        name: vital.name,
+        video_url: vital.video_url,
+        instructions: Array.isArray(vital.instructions)
+          ? vital.instructions
+          : vital.instructions
+            ? [vital.instructions]
+            : []
+      });
+    }
+  }
+
+  console.log(
+    '✅ Vital Animations caricati:',
+    vitalExercises.length
+  );
+} catch (error) {
+  console.warn('Vital Animations non disponibili:', error);
+}
       for (const extra of GYMGIUSE_EXTRA_HIP_EXERCISES) {
         const alreadyPresent = mergedData.some(item =>
           normalize(item.name || '') === normalize(extra.name || '') ||
