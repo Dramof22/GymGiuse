@@ -135,7 +135,11 @@
     ui.exerciseTotal.textContent = `${exercises.length} ${exercises.length === 1 ? 'esercizio' : 'esercizi'}`;
     ui.emptyWorkout.hidden = exercises.length > 0;
     ui.workoutList.innerHTML = exercises.map((ex,index) => {
-      const thumbnail = ex.image ? mediaUrl(ex.image) : '';
+      const video = ex.video_url || VITAL_VIDEO_BY_ID[String(ex.id)] || '';
+      const poster = video && video.split('?')[0].toLowerCase().endsWith('.mp4')
+        ? video.split('?')[0].replace(/\/videos\/([^/]+)\.mp4$/i, '/posters/$1.jpg')
+        : '';
+      const thumbnail = poster || (ex.image ? mediaUrl(ex.image) : '');
       const target = muscleLabel(ex.target || ex.muscles || '');
       const equipment = equipmentLabel(ex.equipment);
       const historyExpanded = historyMode && expandedHistoryIds.has(String(ex.id));
@@ -153,7 +157,9 @@
           <span class="exercise-accordion-arrow" aria-hidden="true">${arrow}</span>
         </button>
         <div class="exercise-card-top">
-          <button class="mini-media-button" type="button" data-action="details" data-id="${escapeHtml(ex.id)}" aria-label="Vedi animazione e istruzioni di ${escapeHtml(ex.name)}">${thumbnail ? `<img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">` : `<span class="no-image">${ex.custom ? '✎' : '＋'}</span>`}<span class="play-overlay">▶</span></button>
+          <button class="mini-media-button" type="button" data-action="details" data-id="${escapeHtml(ex.id)}" aria-label="Vedi animazione e istruzioni di ${escapeHtml(ex.name)}">${thumbnail
+            ? `<img src="${escapeHtml(thumbnail)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+            : `<span class="no-image">${video ? '▶' : (ex.custom ? '✎' : '＋')}</span>`}<span class="play-overlay">▶</span></button>
           <div class="exercise-title-wrap"><h2>${escapeHtml(ex.name)}</h2><p>${escapeHtml(target)}</p><p class="equipment">${escapeHtml(equipment)}</p></div>
           <div class="exercise-tools"><button class="small-icon" type="button" data-action="up" data-id="${escapeHtml(ex.id)}" aria-label="Sposta su" ${index===0?'disabled':''}>↑</button><button class="small-icon" type="button" data-action="down" data-id="${escapeHtml(ex.id)}" aria-label="Sposta giù" ${index===exercises.length-1?'disabled':''}>↓</button><button class="small-icon remove" type="button" data-action="remove" data-id="${escapeHtml(ex.id)}" aria-label="Rimuovi esercizio">×</button></div>
         </div>
@@ -165,6 +171,7 @@
       </article>`;
     }).join('');
   }
+
   function activeStorageTarget() { return state.workout ? state.workout.exercises : (getActivePlan()?.exercises || []); }
   function persistEditorChange(message = 'Modifica salvata') {
     if (state.workout) { if (!state.editingHistoryId) { state.drafts[state.workout.planId || state.activePlanId] = clone(state.workout); saveKey('gymgiusim_drafts_v1', state.drafts); } saveKey(KEYS.active, { planId: state.activePlanId, workout: state.workout, activeSince: state.activeSince, drafts: state.drafts, editingHistoryId: state.editingHistoryId }); }
@@ -1288,21 +1295,62 @@
       .filter(item => item.score > 0)
       .sort((a, b) => b.score - a.score || a.index - b.index)
       .map(item => item.ex);
-    state.visibleResults = results;
+    state.visibleResults = results.slice(0, 40);
     ui.searchResults.hidden = false;
     if (!results.length) { ui.searchResults.innerHTML = `<div class="history-empty">Nessun esercizio trovato. Puoi crearne uno personalizzato qui sotto.</div>`; ui.catalogStatus.textContent = state.catalog.length ? 'Nessun risultato per questa ricerca.' : 'Catalogo non ancora caricato: puoi comunque creare esercizi personali.'; return; }
-    ui.searchResults.innerHTML = results.map(ex => {
+    ui.searchResults.innerHTML = state.visibleResults.map(ex => {
       const translated = getCatalogName(ex); const img = ex.image ? mediaUrl(ex.image) : '';
       const vitalVideo = ex.video_url || VITAL_VIDEO_BY_ID[String(ex.id)] || '';
       const added = activeStorageTarget().some(item => String(item.id) === String(ex.id));
       return `<div class="result-row"><button class="mini-media-button result-thumb-button" type="button" data-result-detail="${escapeHtml(ex.id)}" aria-label="Dettagli ${escapeHtml(translated)}">${vitalVideo
-      ? `<video class="result-thumb" src="${escapeHtml(vitalVideo)}" autoplay muted loop playsinline preload="metadata" aria-label="Animazione ${escapeHtml(translated)}"></video>`
+      ? `<img class="result-thumb" src="${escapeHtml(vitalVideo.split('?')[0].replace(/\/videos\/([^/]+)\.mp4$/i, '/posters/$1.jpg'))}" alt="" loading="lazy">`
       : img
       ? `<img class="result-thumb" src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.style.display='none'">`
       : `<span class="result-thumb fallback-thumb">✦</span>`}</button><div class="result-copy"><strong>${escapeHtml(translated)}</strong><small>${escapeHtml(muscleLabel(ex.target || ex.muscles))} · ${escapeHtml(equipmentLabel(ex.equipment))}</small>${normalize(ex.name)!==normalize(translated)?`<small class="english-name">${escapeHtml(ex.name)}</small>`:''}</div><button class="add-result" type="button" data-result-add="${escapeHtml(ex.id)}" aria-label="Aggiungi ${escapeHtml(translated)}" ${added?'disabled':''}>${added?'✓':'+'}</button></div>`;
     }).join('');
     ui.catalogStatus.textContent = `${results.length} risultati · premi + per aggiungere`;
+    observeSearchVideos();
   }
+
+  let searchVideoObserver = null;
+
+  function observeSearchVideos() {
+    if (searchVideoObserver) {
+      searchVideoObserver.disconnect();
+    }
+
+    const videos = ui.searchResults.querySelectorAll('video.result-thumb');
+
+    if (!('IntersectionObserver' in window)) {
+      videos.forEach(video => {
+        video.src = video.dataset.src;
+        video.play().catch(() => {});
+      });
+      return;
+    }
+
+    searchVideoObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        const video = entry.target;
+
+        if (entry.isIntersecting) {
+          if (!video.src) {
+            video.src = video.dataset.src;
+          }
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    }, {
+      root: ui.searchResults,
+      rootMargin: '100px 0px',
+      threshold: 0.1
+    });
+
+    videos.forEach(video => searchVideoObserver.observe(video));
+  }
+
   function updateSearchDisplay() { renderSearchResults(); }
   function findCatalogExercise(id) { return [...state.catalog,...state.customExercises].find(ex => String(ex.id) === String(id)); }
 
@@ -1509,7 +1557,11 @@ try {
       ui.planName.value=nomePulito;
       renamePlan();
     }); $('deletePlanButton').addEventListener('click',deleteCurrentPlan);
-    ui.search.addEventListener('input',renderSearchResults); ui.clearSearch.addEventListener('click',()=>{ui.search.value='';renderSearchResults();ui.search.focus();});
+    let searchDebounceTimer;
+    ui.search.addEventListener('input', () => {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(renderSearchResults, 150);
+    }); ui.clearSearch.addEventListener('click',()=>{ui.search.value='';renderSearchResults();ui.search.focus();});
     ui.searchResults.addEventListener('click',event=>{const add=event.target.closest('[data-result-add]'); if(add){const ex=findCatalogExercise(add.dataset.resultAdd);if(ex)addExercise(ex);return;} const detail=event.target.closest('[data-result-detail]');if(detail){const ex=findCatalogExercise(detail.dataset.resultDetail);if(ex)openDetail(ex);}});
     ui.workoutList.addEventListener('click',onWorkoutClick); ui.workoutList.addEventListener('input',event=>{if(event.target.matches('.set-input'))updateSet(event.target);});
     $('finishWorkoutButton').addEventListener('click',finishWorkout); $('startWorkoutButton').addEventListener('click',startWorkout); $('exportButton').addEventListener('click',exportPlan); $('backupButton').addEventListener('click',exportBackup); $('exportBackupButton').addEventListener('click',exportBackup); $('historyButton').addEventListener('click',()=>{renderHistory();ui.historyDialog.hidden=false;document.body.style.overflow='hidden';}); $('historyList').addEventListener('click',historyClick);
