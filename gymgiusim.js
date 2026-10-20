@@ -167,7 +167,14 @@
           ${ex.sets.map((set,setIndex) => `<div class="set-row"><span class="set-number">${setIndex+1}</span><input class="set-input" inputmode="numeric" pattern="[0-9]*" type="text" value="${escapeHtml(set.reps)}" placeholder="—" aria-label="Ripetizioni serie ${setIndex+1} di ${escapeHtml(ex.name)}" data-field="reps" data-id="${escapeHtml(ex.id)}" data-set="${setIndex}"><input class="set-input" inputmode="decimal" type="text" value="${escapeHtml(set.kg)}" placeholder="—" aria-label="Chilogrammi serie ${setIndex+1} di ${escapeHtml(ex.name)}" data-field="kg" data-id="${escapeHtml(ex.id)}" data-set="${setIndex}"></div>`).join('')}
           <div class="set-actions"><button class="set-action" type="button" data-action="add-set" data-id="${escapeHtml(ex.id)}">＋ Serie</button><button class="set-action" type="button" data-action="remove-set" data-id="${escapeHtml(ex.id)}" ${ex.sets.length<=1?'disabled':''}>− Ultima serie</button></div>
         </div>
-        <div class="exercise-card-bottom"><button class="detail-link" type="button" data-action="details" data-id="${escapeHtml(ex.id)}">ANIMAZIONE E ISTRUZIONI ↗</button><small>${ex.custom ? 'Personalizzato' : 'Scheda modificabile'}</small></div>
+        <div class="exercise-card-bottom">
+          <button class="detail-link" type="button" data-action="details" data-id="${escapeHtml(ex.id)}">ANIMAZIONE E ISTRUZIONI ↗</button>
+          <div class="workout-animation-choices">
+            ${(ex.gif_url || ex.image) ? `<button type="button" data-action="animation-original" data-id="${escapeHtml(ex.id)}">Originale</button>` : ''}
+            ${video ? `<button type="button" data-action="animation-vital" data-id="${escapeHtml(ex.id)}">Vital</button>` : ''}
+          </div>
+          <small>${ex.custom ? 'Personalizzato' : 'Scheda modificabile'}</small>
+        </div>
       </article>`;
     }).join('');
   }
@@ -240,6 +247,8 @@
     const index = exercises.findIndex(ex => String(ex.id) === String(id));
     if (index < 0) return;
     if (action === 'details') { openDetail(exercises[index]); return; }
+    if (action === 'animation-original') { openDetail(exercises[index], false, 'Originale'); return; }
+    if (action === 'animation-vital') { openDetail(exercises[index], false, 'Vital'); return; }
     if (action === 'remove') { if (confirm(`Rimuovere "${exercises[index].name}" dalla scheda?`)) { exercises.splice(index,1); persistEditorChange(); renderWorkout(); } return; }
     if (action === 'up' && index > 0) [exercises[index-1],exercises[index]] = [exercises[index],exercises[index-1]];
     if (action === 'down' && index < exercises.length-1) [exercises[index+1],exercises[index]] = [exercises[index],exercises[index+1]];
@@ -1364,7 +1373,7 @@
   "0437": "./vital-animations/videos/0091.mp4"
 };
 
-  function openDetail(ex) {
+function openDetail(ex, fromWorkout = false, preferredAnimation = '') {
     state.detailExercise = ex;
     $('detailTitle').textContent = ex.name;
     $('detailMuscle').textContent = muscleLabel(ex.target || ex.muscles);
@@ -1373,15 +1382,70 @@
     $('detailMuscles').textContent = [muscleLabel(ex.target || ex.muscles), ...(ex.secondaryMuscles || []).map(muscleLabel)].filter(Boolean).join(' · ');
     const media = $('detailMedia');
     const gif = ex.gif_url ? mediaUrl(ex.gif_url) : (ex.image ? mediaUrl(ex.image) : '');
-    const video =
-      ex.video_url ||
-      VITAL_VIDEO_BY_ID[String(ex.id)] ||
-      '';
-    media.innerHTML = video
-      ? `<video src="${escapeHtml(video)}" autoplay muted loop playsinline preload="metadata" controls style="width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:12px;"></video>`
-      : gif
-      ? `<img src="${escapeHtml(gif)}" alt="Animazione di ${escapeHtml(ex.name)}" loading="eager" onerror="this.onerror=null;this.src='${escapeHtml(ex.image?mediaUrl(ex.image):'')}';if(!this.src)this.style.display='none'">`
-      : `<div class="history-empty">Animazione non disponibile per questo esercizio.</div>`;
+    const vitalVideo = ex.video_url || VITAL_VIDEO_BY_ID[String(ex.id)] || '';
+
+    const animations = [];
+
+    if (gif) animations.push({ label: 'Originale', type: 'image', url: gif });
+    if (vitalVideo) animations.push({ label: 'Vital', type: 'video', url: vitalVideo });
+
+    media.innerHTML = '';
+
+    if (animations.length) {
+      const player = document.createElement('div');
+      const buttons = document.createElement('div');
+
+      buttons.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;';
+
+      function showAnimation(index) {
+        const selected = animations[index];
+
+        player.innerHTML = '';
+
+        if (selected.type === 'video') {
+          const video = document.createElement('video');
+          video.src = selected.url;
+          video.autoplay = true;
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          video.controls = true;
+          video.preload = 'metadata';
+          video.style.cssText = 'width:100%;height:auto;max-height:420px;object-fit:contain;border-radius:12px;';
+          player.appendChild(video);
+          video.play().catch(() => {});
+        } else {
+          const img = document.createElement('img');
+          img.src = selected.url;
+          img.alt = 'Animazione di ' + ex.name;
+          img.style.cssText = 'display:block;width:100%;height:380px;max-height:70vh;object-fit:contain;border-radius:12px;margin:0 auto;';
+          player.appendChild(img);
+        }
+
+        [...buttons.children].forEach((button, i) => {
+          button.style.background = i === index ? '#2563eb' : '#263247';
+          button.style.color = '#fff';
+        });
+      }
+
+      animations.forEach((animation, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = animation.label;
+        button.style.cssText = 'border:0;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:600;';
+        button.addEventListener('click', () => showAnimation(index));
+        buttons.appendChild(button);
+      });
+
+      if (false) media.appendChild(buttons);
+      media.appendChild(player);
+
+      const preferredIndex = animations.findIndex(a => a.label === preferredAnimation);
+      const defaultIndex = preferredIndex >= 0 ? preferredIndex : animations.findIndex(a => a.type === 'video');
+      showAnimation(defaultIndex >= 0 ? defaultIndex : 0);
+    } else {
+      media.innerHTML = '<div class="history-empty">Animazione non disponibile per questo esercizio.</div>';
+    }
     const instructions = $('detailInstructions'); instructions.innerHTML = '';
     const instructionList = Array.isArray(ex.instructions) ? ex.instructions : (ex.instructions ? [ex.instructions] : []);
     const fallback = instructionList.length ? instructionList : ['Posiziona il corpo e l’attrezzatura in modo stabile.', 'Esegui il movimento in modo controllato, senza slanci.', 'Mantieni la respirazione regolare e interrompi se senti dolore.'];
