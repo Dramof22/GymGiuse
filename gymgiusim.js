@@ -1550,6 +1550,7 @@
 
     if (animations.length) {
       const player = document.createElement('div');
+      player.classList.add('gg-animation-player');
       const buttons = document.createElement('div');
 
       buttons.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;';
