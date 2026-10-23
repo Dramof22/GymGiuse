@@ -1395,3 +1395,46 @@ body.history-review #addCustomExerciseButton {
 .workout-animation-choices button:hover {
   background: #2563eb;
 }
+
+/* GYM GIUSE - ADATTAMENTO ANIMAZIONI MOBILE V1 */
+@media (max-width: 599px) {
+  .detail-media img,
+  .detail-media video,
+  .detail-media .exercise-animation,
+  .detail-media .exercise-gif {
+    width: 90% !important;
+    height: 90% !important;
+    max-width: 90% !important;
+    max-height: 90% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    transform: none !important;
+    margin: auto !important;
+  }
+}
+
+/* GYM GIUSE - CORREZIONE INQUADRATURA MOBILE V2 */
+@media (max-width: 599px) {
+
+  .detail-media > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .detail-media img,
+  .detail-media video {
+    display: block !important;
+    width: 82% !important;
+    height: auto !important;
+    max-width: 82% !important;
+    max-height: min(310px, 45dvh) !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    transform: none !important;
+    margin: 0 auto !important;
+  }
+
+}
