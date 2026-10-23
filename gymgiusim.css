@@ -1469,3 +1469,10 @@ body.history-review #addCustomExerciseButton {
   }
 
 }
+
+/* GYM GIUSE - SFONDO BIANCO UNIFORME ANIMAZIONI */
+.detail-media,
+.detail-media .gg-animation-player {
+  background-color: #ffffff !important;
+}
+
